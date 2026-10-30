@@ -76,6 +76,8 @@ def fit_batch(args: dict, ctx: Context) -> dict:
               "params": {NAMES[i]: float(np.exp(x_hat[i])) for i in REPORTED},
               "rel_std": {NAMES[i]: float(np.sqrt(post.cov[i, i])) for i in REPORTED if lower[i] < upper[i] - 1e-5}}
     ctx.refusal = None if ok else f"twin not identifiable ({why}): fit another structure or film a new experiment"
+    # full evidence for the UI and operator what-ifs; kept out of the tool result so the agent's context stays small
+    ctx.emit("evidence", {"structure": structure, "x": x_hat.tolist(), "cov": cov.tolist(), "start": list(start), "n_fit": n})
     ctx.emit("fit", result)
     return result
 

@@ -53,7 +53,7 @@ def main() -> None:
     p = np.c_[sx, sy]
     piv = fixed_pivot(p, sth)
     c_kasa, r_kasa = kasa_circle(p)
-    result = {"video": str(args.video), "noun": noun, "box": box, "frames": int(t.size), "frames_with_mask": int(seen.sum()),
+    result = {"video": str(args.video), "noun": noun, "box": box, "H": H.tolist(), "down": list(args.down), "size": [w, h], "frames": int(t.size), "frames": int(t.size), "frames_with_mask": int(seen.sum()),
               "pivot_m": piv.center.tolist(), "pivot_valid": piv.valid, "pivot_radius_m": piv.radius, "pivot_rms_rel": piv.rms_rel,
               "kasa_center_m": c_kasa.tolist(), "kasa_radius_m": r_kasa}
     truth_path = args.video.with_name(args.video.stem + "_truth.json")

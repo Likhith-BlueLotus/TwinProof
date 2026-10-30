@@ -34,6 +34,7 @@ def main() -> None:
         if kind != "commentary" or payload.strip():
             print(f"[{kind}] {json.dumps(payload, default=float)[:220]}")
 
+    emit("session", {"track": str(args.track), "model": str(args.model)})
     api, provider, slug = resolve()
     emit("provider", {"provider": provider, "slug": slug})
     ctx = Context(args.model.read_text(), data["t"][ok], data["phi"][ok], float(data["r_meas"]), emit, proposer=f"{provider}:{slug}")
