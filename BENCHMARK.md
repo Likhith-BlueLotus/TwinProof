@@ -3,6 +3,7 @@
 > **Status: DRAFT.** Freeze after the S1 take-1 fit and **before any held-out evaluation**. Then record the freezing commit hash in [HACKATHON.md](HACKATHON.md). After the freeze, nothing above "Results" changes; the tables below are filled only from logged runs.
 
 ## Protocol
+- **Why G1 uses one-step innovations:** an open-loop simulation of a lightly damped oscillator drifts in phase over many swings, even with correct physics (0.1% period error). On a 15 s SAM-tracked synthetic take, open-loop whiteness rejected the true twin (p = 1e-18), while EKF innovations accepted it (p = 0.86) and still rejected 1.5× damping and ±5 cm length errors. Recorded 2026-10-30, before any real footage.
 - Each scenario has 3 takes at 60 fps. **Take 1 identifies; takes 2 and 3 are held out.** Within take 1, G1 also fits on the first 70% and predicts the last 30%.
 - "Reality" for control evaluation is the twin re-identified from the held-out takes. There is no physical actuator.
 - Every verdict is reproducible from `(claim, data_hash, seed)`. Seeds are logged.
@@ -24,8 +25,10 @@
 ## Frozen constants (must match code)
 | Constant | Value | Where |
 |---|---|---|
-| G1 held-out NRMSE max | 0.10 | `verifier/gates.py` `NRMSE_MAX` |
-| G1 Ljung–Box Q(10) p min | 0.05 | `LJUNG_BOX_P_MIN` |
+| Measurement preprocessing | uniform resample, Kaiser-FIR (β = 8) decimation 60 → 15 Hz, 3 samples trimmed per end | `perception/smoother.py` `decimate_uniform` |
+| Observation model | static cubic calibration φ_obs = q + c₀ + c₁q + c₂q² + c₃q³, prior cₖ ~ N(0, 0.02²) | `physics/identify_s1.py` `observe`, `CAL_PRIOR_SD` |
+| G1 held-out NRMSE max (open-loop continuation of the fitted trajectory) | 0.10 | `verifier/gates.py` `NRMSE_MAX` |
+| G1 whiteness: Ljung–Box Q(10) p min, on held-out **one-step EKF innovations** (process noise tuned on the fit window only) | 0.05 | `LJUNG_BOX_P_MIN`, `physics/ekf.py` |
 | G0 μ range | [0, 1.5] | `MU_MAX` |
 | G2 spectral radius max (per 20 ms control period) | 0.98 | `SPECTRAL_MAX`, `physics/controllers.py` `CONTROL_PERIOD` |
 | G2 ROA search ceiling | \|θ−θ_eq\| ≤ 1 rad | `verifier/pipeline.py` `THETA_REGION_MAX` |
@@ -33,7 +36,8 @@
 | G4 clearance min / force max / cone margin | 0.01 m / 40 N / 0.85 | `CLEARANCE_MIN`, `verifier/verify.py` `F_MAX`, `FRICTION_CONE_MARGIN` |
 | G5 rollouts / horizon / Clopper–Pearson 95% UB max | 300 / 5 s / 2% | `N_ROBUST`, `HORIZON_S`, `P_FAIL_MAX` |
 | Posterior samples (G2) | 256 | `N_POSTERIOR` |
-| Identifiability: cond(H) max / relative std max | 1e6 / 0.5 | `physics/fit_cmaes.py` |
+| Identifiability (on the MJCF parameters φ only; OU κ, σ are noise hyperparameters): cond(H_φφ) max / relative std max | 1e6 / 0.5 | `physics/fit_cmaes.py`, `physics/identify_s1.py` `PHYSICAL` |
+| CMA-ES budget / seed handling | 5000 evaluations; seed s → cma seed s+1 (cma treats 0 as clock) | `agents/dispatch.py`, `physics/fit_cmaes.py` |
 | Loss λ_prior (λ₃) | 1e-3 | `physics/identify_s1.py` `LAM_PRIOR` |
 | Loss λ_IoU (λ₁), λ_slip (λ₂), λ_margin (λ₄) | _set on S1 take 1, then frozen_ | not yet in code |
 

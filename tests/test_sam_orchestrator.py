@@ -10,7 +10,7 @@ PROBE = Path(__file__).parents[1] / "logs/probes/sam_box.json"
 
 
 @pytest.mark.parametrize("noun,clean", [("wooden ruler", "wooden ruler"), ("bar and bolt", "bar"), ("ball, ramp", "ball"),
-                                        ("long thin metal bar swinging", "long thin metal")])
+                                        ("long thin metal bar swinging", "long thin metal"), ("left rod", "rod"), ("Upper Arm", "Arm")])
 def test_sanitize_keeps_one_concept(noun, clean):
     assert sanitize(noun) == clean
 

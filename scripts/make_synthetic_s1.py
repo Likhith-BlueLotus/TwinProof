@@ -17,7 +17,7 @@ from physics.identify_s1 import model_for
 from physics.rollout import rollout
 
 OUT = Path("data/videos/synthetic")
-FPS, SECONDS, W, H = 60, 5.0, 960, 540
+FPS, SECONDS, W, H = 60, 15.0, 960, 540  # real takes are 10-15 s (data/FILMING.md)
 MM = 2  # plane canvas pixels per mm
 BOARD_MM = (600, 450)
 MARKER_TL_MM, MARKER_MM = (50, 50), 80

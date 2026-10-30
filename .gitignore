@@ -8,3 +8,4 @@ data/videos/
 data/sam_cache/
 node_modules/
 .DS_Store
+MUJOCO_LOG.TXT

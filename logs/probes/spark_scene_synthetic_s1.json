@@ -1,0 +1,12 @@
+{
+ "marker_visible": true,
+ "model_classes": [
+  "pendulum_viscous",
+  "pendulum_viscous_coulomb",
+  "pendulum_stiction"
+ ],
+ "nouns": [
+  "left rod",
+  "right rod"
+ ]
+}

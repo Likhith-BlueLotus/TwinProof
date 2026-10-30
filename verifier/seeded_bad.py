@@ -63,4 +63,6 @@ def evidence_from_truth(base_xml: str, x_true: np.ndarray, rel_std: np.ndarray, 
         r[k] = a * r[k - 1] + np.sqrt(sigma**2 / (2 * kappa) * (1 - a**2)) * rng.standard_normal()
     meas = 0.003
     theta = clean + r + meas * rng.standard_normal(t.size)
-    return Evidence(base_xml, x_true, np.diag(rel_std**2), t, theta, (0.5, 0.0), meas**2, goal=np.pi, success_tol=0.05)
+    n = int(0.7 * t.size)
+    return Evidence(base_xml, x_true, np.diag(rel_std**2), t[:n], theta[:n], t[n:], theta[n:], (float(t[0]), 0.5, 0.0), meas**2,
+                    goal=np.pi, success_tol=0.05)

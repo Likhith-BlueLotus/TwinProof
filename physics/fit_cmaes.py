@@ -8,6 +8,7 @@ import cma
 import numpy as np
 
 COND_MAX = 1e6
+EIG_FLOOR_REL = 1e-9
 REL_STD_MAX = 0.5
 
 Objective = Callable[[np.ndarray], float]
@@ -23,7 +24,8 @@ class Posterior(NamedTuple):
 def fit(objective: Objective, x0: np.ndarray, sigma0: float, lower: np.ndarray, upper: np.ndarray,
         seed: int, max_evals: int = 3000) -> tuple[np.ndarray, float]:
     """Box-bounded CMA-ES. shortcut: runs locally in one process; fan out to Modal (fit_worker) if a fit gets slow."""
-    opts = {"bounds": [list(lower), list(upper)], "seed": seed, "maxfevals": max_evals, "verbose": -9}
+    # cma treats seed 0 (and None) as "seed from the clock"; shift so every seed, including 0, is reproducible
+    opts = {"bounds": [list(lower), list(upper)], "seed": seed + 1, "maxfevals": max_evals, "verbose": -9}
     es = cma.CMAEvolutionStrategy(list(x0), sigma0, opts)
     es.optimize(objective)
     return np.asarray(es.result.xbest), float(es.result.fbest)
@@ -41,15 +43,21 @@ def laplace(objective: Objective, x_hat: np.ndarray, step: float = 1e-3) -> Post
                 objective(x_hat + e[i] + e[j]) - objective(x_hat + e[i] - e[j])
                 - objective(x_hat - e[i] + e[j]) + objective(x_hat - e[i] - e[j])
             ) / (4 * step**2)
-    return Posterior(x_hat, np.linalg.pinv(H), H, f0)
+    # nuisance directions can be flat or slightly negative at a numerical optimum; floor the spectrum so the
+    # covariance is always a valid PSD matrix for sampling (identifiability() judges the physical block)
+    w, v = np.linalg.eigh((H + H.T) / 2)
+    floor = max(w.max(), 1e-12) * EIG_FLOOR_REL
+    cov = v @ np.diag(1 / np.maximum(w, floor)) @ v.T
+    return Posterior(x_hat, cov, H, f0)
 
 
 def identifiability(post: Posterior, names: list[str], log_idx: list[int]) -> tuple[bool, str]:
     """Refuse if cond(H) > 1e6 or any relative posterior std > 50%.
 
-    log_idx: parameters fitted in log space, where sqrt(Sigma_ii) is already the relative std.
+    log_idx: the parameters judged (the MJCF parameters phi, fitted in log space, so sqrt(Sigma_ii) is
+    already the relative std); conditioning is assessed on their Hessian block.
     """
-    eig = np.linalg.eigvalsh(post.hessian)
+    eig = np.linalg.eigvalsh(post.hessian[np.ix_(log_idx, log_idx)])
     if eig.min() <= 0:
         return False, "Hessian not positive definite: optimum is flat or a saddle"
     cond = eig.max() / eig.min()

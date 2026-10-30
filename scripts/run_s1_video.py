@@ -12,9 +12,9 @@ from pathlib import Path
 import numpy as np
 
 from perception.extract import first_frame, frame_times, homography, plane_grid, tracks
-from perception.kinematics import fixed_pivot, kasa_circle
+from perception.kinematics import fixed_pivot, kasa_circle, swing_angle
 from perception.sam_orchestrator import box_prompt, client, detect_frame0, full_frame_masks, track
-from perception.smoother import rts_smooth
+from perception.smoother import decimate_uniform, rts_smooth
 
 OBJECT_ID = 1
 
@@ -24,6 +24,7 @@ def main() -> None:
     ap.add_argument("video", type=Path)
     ap.add_argument("--side", type=float, required=True, help="measured marker side, metres")
     ap.add_argument("--noun", action="append", required=True, help="SAM concept for the moving body (repeatable)")
+    ap.add_argument("--down", type=float, nargs=2, default=(0.0, 1.0), help="gravity direction in the marker plane (from the static clip)")
     args = ap.parse_args()
 
     t = frame_times(args.video)
@@ -60,7 +61,13 @@ def main() -> None:
         truth = json.loads(truth_path.read_text())
         result["pivot_error_m"] = float(np.linalg.norm(piv.center - np.array(truth["pivot_rel_marker_m"])))
         result["truth_pivot_m"] = truth["pivot_rel_marker_m"]
+    # swing angle for identification at 15 Hz (codec-safe decimation); noise from decimated-vs-smoothed scatter
+    td, phi = decimate_uniform(t, swing_angle(tr.xy, piv.center, np.array(args.down)))
+    sm = rts_smooth(td, phi, sigma=0.002, q_tilde=50.0)
+    sigma_phi = float(np.std(phi - sm.states[:, 0]))
+    result["sigma_phi_rad"] = sigma_phi
     out = Path("logs/runs") / f"{args.video.stem}_s1.json"
+    np.savez(out.with_suffix(".npz"), t=td, phi=phi, r_meas=sigma_phi**2)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=1, default=float))
     print(json.dumps(result, indent=1, default=float))

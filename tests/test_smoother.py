@@ -49,3 +49,14 @@ def test_savgol_cross_check_is_correct_on_clean_data():
     t, _, omega = _take(4)
     sg = savgol_rate(t, AMP * np.sin(W * t))
     assert np.max(np.abs(sg - omega)[10:-10]) < 0.02 * AMP * W
+
+
+def test_decimate_removes_codec_period_and_keeps_dynamics():
+    from perception.smoother import decimate_uniform
+    rng = np.random.default_rng(5)
+    t = np.cumsum(rng.uniform(0.99, 1.01, 600) / 60.0)  # phone VFR jitter is ~1%
+    clean = AMP * np.sin(W * t)
+    codec = 0.002 * np.tile([1.0, -0.5, -0.5], t.size // 3 + 1)[: t.size]  # period-3 frame-type artifact
+    td, zd = decimate_uniform(t, clean + codec, 4)
+    truth = AMP * np.sin(W * td)
+    assert np.max(np.abs(zd - truth)[5:-5]) < 3e-4  # artifact gone, swing intact

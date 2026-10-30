@@ -12,10 +12,10 @@ import mujoco
 import numpy as np
 
 from physics.controllers import CONTROL_PERIOD, LQRSpec, closed_loop_step, policy
-from physics.identify_s1 import xml_for
+from physics.identify_s1 import observe, xml_for
 from physics.mjcf_patch import apply_patch
 from physics.monitor import contact_metrics
-from physics.ou import ou_innovations
+from physics.ekf import innovations as ekf_innovations, tune_accel_psd
 from physics.rollout import rollout
 from verifier.g7_scan import scan_source
 from verifier.gates import GateResult, g0_admissible, g1_heldout, g4_contacts, g5_robustness, g7_patch_guard
@@ -44,9 +44,11 @@ class Evidence:
     base_xml: str
     x_hat: np.ndarray
     cov: np.ndarray
+    t_fit: np.ndarray  # fit window: tunes the EKF process noise only
+    theta_fit: np.ndarray
     t_heldout: np.ndarray
     theta_heldout: np.ndarray
-    state0_heldout: tuple[float, float]
+    start: tuple[float, float, float]  # (t0, q0, v0) true-space state the held-out rollout continues from
     r_meas: float
     goal: float
     success_tol: float
@@ -127,10 +129,17 @@ def _g7(claim: Claim, ev: Evidence, target: float | None) -> GateResult:
 
 
 def _g1(model: mujoco.MjModel, ev: Evidence) -> GateResult:
-    pred = rollout(model, np.array([ev.state0_heldout[0]]), np.array([ev.state0_heldout[1]]), ev.t_heldout)[:, 0]
-    kappa, sigma = np.exp(ev.x_hat[2:3]), np.exp(ev.x_hat[3:4])
-    nu, var = ou_innovations(ev.theta_heldout - pred, ev.t_heldout, kappa, sigma, ev.r_meas)
-    return g1_heldout(ev.theta_heldout, pred, (nu / np.sqrt(var))[:, 0])
+    """Open-loop NRMSE of the continued trajectory on the held-out window, and whiteness of the EKF's
+    one-step innovations there (process noise tuned on the fit window, then frozen)."""
+    # continue the fitted trajectory into the held-out window: a restart from a re-estimated state would hide or add phase error
+    t0, q0, v0 = ev.start
+    pred = observe(rollout(model, np.array([q0]), np.array([v0]), np.r_[t0, ev.t_heldout])[1:, 0], ev.x_hat)
+    t_all, y_all = np.r_[ev.t_fit, ev.t_heldout], np.r_[ev.theta_fit, ev.theta_heldout]
+    psd = tune_accel_psd(model, ev.x_hat, ev.t_fit, ev.theta_fit, (q0, v0), ev.r_meas)
+    inn = ekf_innovations(model, ev.x_hat, t_all, y_all, (q0, v0), ev.r_meas, psd)
+    held = slice(ev.t_fit.size, None)
+    result = g1_heldout(ev.theta_heldout, pred, (inn.nu / np.sqrt(inn.var))[held])
+    return result._replace(witness={**result.witness, "accel_psd": psd})
 
 
 def _ensemble(models, K, P, c_star, spec: LQRSpec, kappa, sigma, rng) -> tuple[np.ndarray, np.ndarray]:

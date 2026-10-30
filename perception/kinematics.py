@@ -73,3 +73,14 @@ def slip(v_t: np.ndarray, omega: np.ndarray, rho: float, v0: float = 0.01) -> tu
     s = np.asarray(v_t) - np.asarray(omega) * rho
     eps = np.abs(s) / np.maximum(np.abs(v_t), v0)
     return s, eps, eps > SLIDING_EPS
+
+
+def swing_angle(p: np.ndarray, pivot: np.ndarray, down: np.ndarray) -> np.ndarray:
+    """Pendulum angle of p about the pivot, 0 when hanging along `down` (unit vector in the marker plane).
+
+    On real footage `down` comes from the static clip (pivot -> resting centroid): the marker is not
+    printed level with gravity.
+    """
+    v = np.asarray(p) - pivot
+    d = np.asarray(down, float) / np.linalg.norm(down)
+    return np.arctan2(d[1] * v[:, 0] - d[0] * v[:, 1], v @ d)

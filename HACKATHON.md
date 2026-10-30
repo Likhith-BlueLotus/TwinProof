@@ -12,6 +12,7 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-30 | | | S1 MJCF, whitelisted patcher, OU residual, composite loss (H); CMA-ES + Laplace + identifiability, G0/G1 (I) — synthetic data only | Claude Code | `pytest tests/test_physics.py tests/test_identify_s1.py` |
 | 2026-10-30 | | | LQR, Lipschitz-sound ROA shells, G2/G3 (L); G4/G5/G7, full verify chain, G6 seeded-bad 7/7 caught, 0 false rejects (M) — synthetic data only | Claude Code | `pytest tests/test_controller_gates.py tests/test_verify.py tests/test_g7_scan.py` |
 | 2026-10-30 | | | Muse Code commit hook + git pre-commit (tests + G7); BENCHMARK.md draft; day-1 Meta probes; SAM orchestrator on meta_sam_parser; synthetic S1 video → live SAM tracking → pivot 5.7 mm from truth | Claude Code; SAM 3.1; Muse Spark 1.3 | `logs/probes/FINDINGS.md`, `logs/runs/s1_s1.json` |
+| 2026-10-30 | | | Spark 1.3 scene nouns; agent loop (resolver, tools, dispatch, 6-reject stop); G1 measurement model (decimation, calibration, EKF innovations); cma seed-0 reproducibility fix; live agent on SAM-tracked 15 s synthetic take: 3 refused, c-4 admitted | Claude Code; Muse Spark 1.3 (dev fallback); SAM 3.1 | `logs/runs/agent_s1_s1_20261030T214459.jsonl` |
 
 ## Pre-registration
 

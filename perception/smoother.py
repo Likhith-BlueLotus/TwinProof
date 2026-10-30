@@ -4,10 +4,13 @@ from __future__ import annotations
 from typing import NamedTuple
 
 import numpy as np
-from scipy.signal import savgol_filter
+from scipy.signal import resample_poly, savgol_filter
 
 H = np.array([[1.0, 0.0, 0.0]])
 P0_DIAG_SCALE = 1e4  # vague prior on rate and acceleration
+KAISER_BETA = 8.0  # anti-alias window for decimation; pre-registered in BENCHMARK.md
+EDGE_TRIM = 3  # decimated samples dropped at each end
+DECIMATE = 4  # 60 fps -> 15 Hz
 
 
 class Smoothed(NamedTuple):
@@ -86,3 +89,21 @@ def savgol_rate(t: np.ndarray, z: np.ndarray, window: int = 7, poly: int = 3) ->
     zu = np.interp(tu, t[ok], np.asarray(z)[ok])
     du = savgol_filter(zu, window, poly, deriv=1, delta=tu[1] - tu[0])
     return np.interp(t, tu, du)
+
+
+def decimate_uniform(t: np.ndarray, z: np.ndarray, factor: int = DECIMATE) -> tuple[np.ndarray, np.ndarray]:
+    """Resample onto a uniform grid, then polyphase Kaiser-FIR downsample with cutoff at the new Nyquist.
+
+    Codecs cycle frame types (I/P/B) every few frames, putting periodic error on mask edges at fs/2..fs/5.
+    At 60 -> 15 Hz with beta 8 those cycles are suppressed by >= 99 dB, white noise stays white (lag acf
+    ~0.04: G1's measurement model needs this; a 5 Hz Butterworth gave 0.48) and the 0.8 Hz gain is
+    1.00001. Linear edge padding keeps start-up error < 4e-4 rad; EDGE_TRIM samples are dropped per end.
+    Missing samples are interpolated first.
+    """
+    t = np.asarray(t, dtype=float)
+    ok = np.isfinite(z)
+    tu = np.linspace(t[0], t[-1], t.size)
+    zu = np.interp(tu, t[ok], np.asarray(z, dtype=float)[ok])
+    zd = resample_poly(zu, 1, factor, window=("kaiser", KAISER_BETA), padtype="line")
+    keep = slice(EDGE_TRIM, -EDGE_TRIM)
+    return tu[::factor][: zd.size][keep], zd[keep]

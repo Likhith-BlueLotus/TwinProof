@@ -57,3 +57,12 @@ def test_slip_detects_sliding():
     omega = np.array([1.0 / 0.02, 0.5 / 0.02])
     _, _, sliding = slip(v_t, omega, rho=0.02)
     assert list(sliding) == [False, True]
+
+
+def test_swing_angle_matches_truth_for_any_down_direction():
+    from perception.kinematics import swing_angle
+    th = np.linspace(-0.6, 0.6, 50)
+    for tilt in (0.0, 0.3):  # marker printed 0.3 rad off gravity
+        down = np.array([np.sin(tilt), np.cos(tilt)])
+        p = PIVOT + R * np.c_[np.sin(th + tilt), np.cos(th + tilt)]
+        assert np.allclose(swing_angle(p, PIVOT, down), th)

@@ -26,6 +26,7 @@ RETRY_STATUS = {429, 500, 502, 503}
 RETRIES = 4
 FILE_PURPOSE = "user_data"
 MULTI_CONCEPT = re.compile(r"[,;+\n]|\b(and|or|not|without)\b", re.I)
+POSITIONAL = {"left", "right", "top", "bottom", "upper", "lower", "front", "back"}  # same object, different place
 
 Boxes = dict[int, tuple[int, int, int, int]]  # object id -> half-open (left, top, right, bottom)
 Masks = dict[int, dict[int, np.ndarray]]  # frame -> object id -> full-frame uint8 mask
@@ -37,7 +38,7 @@ def client() -> OpenAI:
 
 def sanitize(noun: str) -> str:
     """SAM takes one concept per request: keep the first fragment, at most 3 words."""
-    words = MULTI_CONCEPT.split(noun, maxsplit=1)[0].split()[:3]
+    words = [w for w in MULTI_CONCEPT.split(noun, maxsplit=1)[0].split() if w.lower() not in POSITIONAL][:3]
     if not words:
         raise ValueError(f"empty concept after sanitize: {noun!r}")
     return " ".join(words)
@@ -92,7 +93,7 @@ def detect_frame0(api: OpenAI, frame0: np.ndarray, nouns: list[str]) -> dict[str
         return noun, {int(r.object_id): (int(r.left), int(r.top), int(r.right), int(r.bottom)) for r in parse(text, video=False) if r.kind == "box"}
 
     with ThreadPoolExecutor(max_workers=6) as pool:
-        return dict(pool.map(one, [sanitize(n) for n in nouns]))
+        return dict(pool.map(one, list(dict.fromkeys(sanitize(n) for n in nouns))))
 
 
 def box_prompt(boxes: Boxes, width: int, height: int) -> str:
