@@ -11,6 +11,7 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-30 | | | Rectify-then-moments + ArUco (E); fixed pivot/ICR/Kåsa/prismatic/slip (G) | Claude Code | `pytest tests/test_masks.py tests/test_kinematics.py` |
 | 2026-10-30 | | | S1 MJCF, whitelisted patcher, OU residual, composite loss (H); CMA-ES + Laplace + identifiability, G0/G1 (I) — synthetic data only | Claude Code | `pytest tests/test_physics.py tests/test_identify_s1.py` |
 | 2026-10-30 | | | LQR, Lipschitz-sound ROA shells, G2/G3 (L); G4/G5/G7, full verify chain, G6 seeded-bad 7/7 caught, 0 false rejects (M) — synthetic data only | Claude Code | `pytest tests/test_controller_gates.py tests/test_verify.py tests/test_g7_scan.py` |
+| 2026-10-30 | | | Muse Code commit hook + git pre-commit (tests + G7); BENCHMARK.md draft; day-1 Meta probes; SAM orchestrator on meta_sam_parser; synthetic S1 video → live SAM tracking → pivot 5.7 mm from truth | Claude Code; SAM 3.1; Muse Spark 1.3 | `logs/probes/FINDINGS.md`, `logs/runs/s1_s1.json` |
 
 ## Pre-registration
 

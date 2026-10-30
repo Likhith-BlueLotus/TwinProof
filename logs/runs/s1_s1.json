@@ -1,0 +1,29 @@
+{
+ "video": "data/videos/synthetic/s1.mp4",
+ "noun": "stick",
+ "box": [
+  522,
+  145,
+  747,
+  448
+ ],
+ "frames": 300,
+ "frames_with_mask": 300,
+ "pivot_m": [
+  0.2744426143433423,
+  0.04129269347405615
+ ],
+ "pivot_valid": true,
+ "pivot_radius_m": 0.17169571864028108,
+ "pivot_rms_rel": 0.0023047547964242204,
+ "kasa_center_m": [
+  0.27446250795829996,
+  0.049455089649392145
+ ],
+ "kasa_radius_m": 0.16377430321956912,
+ "pivot_error_m": 0.005705750761704605,
+ "truth_pivot_m": [
+  0.28,
+  0.04
+ ]
+}

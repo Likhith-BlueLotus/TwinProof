@@ -1,0 +1,7 @@
+{
+ "probe": "wrong_aspect",
+ "prompt": "<0f>1<|box;x1=480;y1=80;x2=650;y2=460;w=960;h=960|>",
+ "status": 400,
+ "error": "{'code': None, 'message': 'prompt coordinates are given in a 960x960 frame, whose aspect ratio does not match the 960x540 media', 'param': None, 'type': 'invalid_request_error'}",
+ "seconds": 1.15
+}

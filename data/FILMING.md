@@ -21,7 +21,7 @@ All footage must be filmed by you during the hackathon window (clean-room rule).
 
 ## S1: Pendulum (guaranteed)
 - **Build:** a rigid bar such as a 30 cm wooden or steel ruler with a hole near one end. Use a bolt or nail through the hole as the pivot, fixed to a shelf edge or clamped stick so the bar swings freely. Stick a strip of contrasting tape along the bar.
-- **Marker:** on a board **directly behind the bar, parallel to its swing plane**, as close to the bar as it can be without touching.
+- **Marker:** on a board **directly behind the bar, parallel to its swing plane**, as close to the bar as it can be without touching. Put it **within ~10 cm of the pivot bolt**: on a synthetic take, an 80 mm marker 28 cm from the pivot cost ~2.5 mm of pivot error from corner noise alone. Fill the frame with the swing and the marker. Don't shoot a wide room.
 - **Camera:** facing the board straight on, at about 1–1.5 m.
 - **Measure:** bar length, bar mass, hole-centre to bar-end, pivot position relative to the marker's top-left corner (x, y in mm along the marker edges), Z and Δz.
 - **Takes:** take 1 released from ~30°, take 2 from ~20°, take 3 from ~40°.

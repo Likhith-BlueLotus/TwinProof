@@ -30,7 +30,9 @@ class Moments(NamedTuple):
 
 def detect_aruco(gray: np.ndarray, marker_id: int, dictionary: int = cv2.aruco.DICT_4X4_50) -> np.ndarray:
     """Corners (TL, TR, BR, BL) in image pixels of the given marker id."""
-    detector = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(dictionary))
+    params = cv2.aruco.DetectorParameters()
+    params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX  # corner error is amplified far from the marker
+    detector = cv2.aruco.ArucoDetector(cv2.aruco.getPredefinedDictionary(dictionary), params)
     corners, ids, _ = detector.detectMarkers(gray)
     if ids is None or marker_id not in ids.ravel():
         raise LookupError(f"ArUco id {marker_id} not found")

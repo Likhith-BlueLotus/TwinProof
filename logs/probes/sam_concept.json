@@ -1,0 +1,17 @@
+{
+ "probe": "concept",
+ "prompt": "stick",
+ "status": "ok",
+ "event_types": [
+  "response.completed",
+  "response.content_part.added",
+  "response.content_part.done",
+  "response.created",
+  "response.in_progress",
+  "response.output_item.added",
+  "response.output_item.done",
+  "response.output_text.done"
+ ],
+ "output_text": "",
+ "seconds": 3.21
+}
