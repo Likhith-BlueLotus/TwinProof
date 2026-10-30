@@ -15,9 +15,9 @@ All footage must be filmed by you during the hackathon window (clean-room rule).
 4. Use a plain background, a moving part that contrasts with it, even light, and no strong shadows across the marker.
 5. Each clip is **~10–15 s**. Start recording, wait 1 s, release from rest, keep your hands out of frame after release.
 
-## Static calibration (once, 5 s)
-- Marker only, camera on the tripod, nothing moving. Gives the measurement noise σ for the smoother.
-- Save as `data/videos/static/take1.mp4`.
+## Static calibration (5 s, once per scenario setup)
+- Marker and the resting object, camera on the tripod, nothing moving. Gives the measurement noise σ for the smoother.
+- Film it right before each scenario's takes, without moving the tripod: `data/videos/static/s1.mp4`, `s2.mp4`, `s3.mp4`.
 
 ## S1: Pendulum (guaranteed)
 - **Build:** a rigid bar such as a 30 cm wooden or steel ruler with a hole near one end. Use a bolt or nail through the hole as the pivot, fixed to a shelf edge or clamped stick so the bar swings freely. Stick a strip of contrasting tape along the bar.
@@ -27,11 +27,11 @@ All footage must be filmed by you during the hackathon window (clean-room rule).
 - **Takes:** take 1 released from ~30°, take 2 from ~20°, take 3 from ~40°.
 
 ## S2: Incline (guaranteed)
-- **Build:** a flat board ramp at 10–20°, with the angle measured. Roll a can or cylinder and a ball. Put one tape stripe across the can's end face so its rotation is visible.
-- **Marker:** flat **on the ramp surface**, beside the rolling path.
-- **Camera:** perpendicular to the ramp's side, so the can's end face and the marker are both visible.
-- **Measure:** ramp angle, can radius and mass, Z, Δz.
-- **Takes:** 3 releases from rest at the top, using the same object each time.
+- **Build:** a flat board ramp at 10–20°, with the angle measured. Roll a **can of food** (a cylinder). Stick one strip of contrasting tape across the can's **end face**, like a clock hand, so its rotation is visible.
+- **Marker:** on a **vertical** board or box standing right beside the ramp, **parallel to the can's end face**. That vertical plane is the plane of motion seen from the side. Keep Δz (marker surface to the can's end face) small, and place the marker near the middle of the rolling path.
+- **Camera:** side view, looking straight at the marker and the can's end face, at about 1 m.
+- **Measure:** ramp angle, can radius and mass, ramp length used, Z, Δz.
+- **Takes:** 3 releases from rest at the same top position. Let it roll to the bottom without catching it in frame.
 
 ## S3: Cabinet door (optional, killed if not working by Sun 22:00)
 - **Build:** a small cabinet door that swings freely. Put contrasting tape on its top edge.
@@ -40,11 +40,20 @@ All footage must be filmed by you during the hackathon window (clean-room rule).
 - **Measure:** hinge axis position relative to the marker, door width, Z, Δz.
 - **Takes:** push the door open by hand to ~60°, release, and let it swing or settle. Do 3 takes.
 
+## Demo B-roll (for the 3:00 video, storyboard §7.1)
+Film these with a **second phone or a friend**, while the tripod phone records the real takes:
+- **Hero shot (0:00–0:05):** over your shoulder, the tripod phone filming the pendulum with the marker visible. One release, about 8 s.
+- **Setup wide shot:** the whole rig (bar, bolt, marker board, tripod phone) with no motion, 5 s.
+- **Close-ups:** your hand releasing the bar (3 s); the marker held next to a ruler (3 s).
+- **Optional:** the same three shots for the incline.
+Only footage you film yourself goes in the video.
+
 ## Where files go
 ```
-data/videos/static/take1.mp4
+data/videos/static/s1.mp4  s2.mp4  s3.mp4
 data/videos/s1_pendulum/take1.mp4  take2.mp4  take3.mp4
 data/videos/s2_incline/take1.mp4   take2.mp4  take3.mp4
 data/videos/s3_hinge/take1.mp4     take2.mp4  take3.mp4
+data/videos/broll/<anything>.mp4
 ```
 AirDrop the clips to the Mac, drop them into those folders, and fill one row per take in `data/take_log.csv`.
