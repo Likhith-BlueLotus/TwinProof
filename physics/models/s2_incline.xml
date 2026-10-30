@@ -1,0 +1,13 @@
+<!-- S2: food can (solid cylinder) released from rest on a flat ramp. Geometry and mass are measured; geom friction is identified. -->
+<mujoco model="s2_incline">
+  <option timestep="0.001" integrator="implicitfast" cone="elliptic"/>
+  <worldbody>
+    <body name="ramp" euler="0 15 0">
+      <geom name="ramp" type="box" size="0.6 0.15 0.01" pos="0 0 -0.01" friction="0.6 0.005 0.0002"/>
+    </body>
+    <body name="can" pos="-0.45 0 0.04">
+      <freejoint name="can"/>
+      <geom name="can" type="cylinder" size="0.037 0.05" euler="90 0 0" mass="0.4" friction="0.6 0.005 0.0002" condim="6"/>
+    </body>
+  </worldbody>
+</mujoco>

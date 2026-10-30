@@ -14,6 +14,7 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-30 | | | Muse Code commit hook + git pre-commit (tests + G7); BENCHMARK.md draft; day-1 Meta probes; SAM orchestrator on meta_sam_parser; synthetic S1 video → live SAM tracking → pivot 5.7 mm from truth | Claude Code; SAM 3.1; Muse Spark 1.3 | `logs/probes/FINDINGS.md`, `logs/runs/s1_s1.json` |
 | 2026-10-30 | | | Spark 1.3 scene nouns; agent loop (resolver, tools, dispatch, 6-reject stop); G1 measurement model (decimation, calibration, EKF innovations); cma seed-0 reproducibility fix; live agent on SAM-tracked 15 s synthetic take: 3 refused, c-4 admitted | Claude Code; Muse Spark 1.3 (dev fallback); SAM 3.1 | `logs/runs/agent_s1_s1_20261030T214459.jsonl` |
 | 2026-10-30 | | | FastAPI backend (runs, ghost-overlay geometry, what-if re-verify, live start); React web UI (design tokens via ui-ux-pro-max, motion via emil-design-eng): video + ghost twin, phase portrait, verdict card with gate chips, replayable claim stream, what-if bar | Claude Code | `tests/test_api.py`; overlay within 8 px median of the true bar tip |
+| 2026-10-30 | | | S2 incline: MuJoCo ramp + can (rolling 1.658 vs 1.693 m/s² theory, sliding exact), slip-residual contact classification, μ identification, G7/G0/G1 verdicts; Glimmer SFT generator (6 fix classes, seed-split); README | Claude Code | `tests/test_identify_s2.py`, `tests/test_glimmer_sft.py` |
 
 ## Pre-registration
 
