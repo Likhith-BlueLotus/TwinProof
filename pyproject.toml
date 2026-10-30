@@ -1,0 +1,22 @@
+[project]
+name = "twinproof"
+version = "0.1.0"
+description = "Film it. Twin it. Prove it. Verified control from phone video."
+requires-python = ">=3.12,<3.14"
+license = "Apache-2.0"
+# add openai, modal, fastapi as the phases that call them land
+dependencies = [
+  "cma>=4.5.0",
+  "mujoco>=3.17.0",
+  "numpy>=2.1",
+  "opencv-contrib-python-headless>=5.0.0.93",
+  "scipy>=1.14",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "hypothesis>=6"]
+
+[tool.pytest.ini_options]
+testpaths = ["verifier/tests", "tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore:Could not import matplotlib:UserWarning"]

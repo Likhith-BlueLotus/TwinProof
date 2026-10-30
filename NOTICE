@@ -1,0 +1,6 @@
+TwinProof
+Copyright 2026 Likhith
+
+Third-party components (vendored under third_party/, "third-party, unchanged"):
+- (none yet) MuJoCo Menagerie Franka Panda model — Apache-2.0
+- (none yet) meta-sam-parser
