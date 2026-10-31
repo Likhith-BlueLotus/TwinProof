@@ -7,6 +7,7 @@
     </body>
     <body name="can" pos="-0.45 0 0.04">
       <freejoint name="can"/>
+      <inertial pos="0 0 0" mass="0.4" diaginertia="0.000470233333 0.0002738 0.000470233333"/>
       <geom name="can" type="cylinder" size="0.037 0.05" euler="90 0 0" mass="0.4" friction="0.6 0.005 0.0002" condim="6"/>
     </body>
   </worldbody>

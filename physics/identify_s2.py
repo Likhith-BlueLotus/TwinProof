@@ -7,6 +7,8 @@ fitted); "incline_sliding" pins rolling friction low and fits mu. BIC picks betw
 """
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
+
 import mujoco
 import numpy as np
 
@@ -14,13 +16,15 @@ from physics.loss import composite_loss
 from physics.mjcf_patch import apply_patch
 from physics.reset import set_state
 
-NAMES = ["mu", "rolling_friction", "ou_kappa", "ou_sigma", "d_release", "d_s0", "d_psi0"]
-PHYSICAL = [0, 1]  # MJCF parameters phi; which ones are free depends on the structure
+NAMES = ["mu", "rolling_friction", "ou_kappa", "ou_sigma", "d_release", "d_s0", "d_psi0", "inertia_ratio"]
+# MJCF parameters phi judged by the identifiability gate, per structure (x[7] = log beta, beta = I_axis / (m r^2))
+FREE_PHYSICAL = {"incline_rolling": [7], "incline_sliding": [0, 7]}
 STRUCTURES = ("incline_rolling", "incline_sliding")
 RELEASE_SCALE, S0_SCALE, PSI0_SCALE = 0.02, 0.002, 0.02  # s, m, rad per unit offset
-LOWER = np.r_[np.log([1e-3, 1e-6, 1e-2, 1e-5]), -5, -5, -5]
-UPPER = np.r_[np.log([1.5, 1e-2, 1e2, 1.0]), 5, 5, 5]
-PINNED = {"incline_rolling": (0, np.log(1.0)), "incline_sliding": (1, np.log(1e-6))}
+LOWER = np.r_[np.log([1e-3, 1e-6, 1e-2, 1e-5]), -5, -5, -5, np.log(0.3)]
+UPPER = np.r_[np.log([1.5, 1e-2, 1e2, 1.0]), 5, 5, 5, np.log(1.5)]
+# rolling: no slip, so mu is irrelevant; rolling resistance is inseparable from beta over a sub-second roll
+PINNED = {"incline_rolling": [(0, np.log(1.0)), (1, np.log(1e-6))], "incline_sliding": [(1, np.log(1e-6))]}
 PIN_WIDTH = 1e-6  # CMA-ES needs lower < upper
 LAM_PRIOR = 1e-3
 GEOMS = (".//geom[@name='can']", ".//geom[@name='ramp']")
@@ -30,15 +34,41 @@ def bounds(structure: str) -> tuple[np.ndarray, np.ndarray]:
     if structure not in PINNED:
         raise ValueError(f"unknown S2 structure {structure!r}")
     lower, upper = LOWER.copy(), UPPER.copy()
-    i, value = PINNED[structure]
-    lower[i], upper[i] = value, value + PIN_WIDTH
+    for i, value in PINNED[structure]:
+        lower[i], upper[i] = value, value + PIN_WIDTH
     return lower, upper
 
 
-def xml_for(base_xml: str, x: np.ndarray) -> str:
+INERTIAL = ".//body[@name='can']/inertial"
+
+
+def patch_for(base_xml: str, x: np.ndarray) -> dict[str, str]:
+    """Whitelisted MJCF patch for x: geom friction, and the can's inertia when x carries beta (x[7])."""
     mu, roll = np.exp(x[:2])
-    friction = f"{mu:.9g} 0.005 {roll:.9g}"
-    return apply_patch(base_xml, {f"{g}@friction": friction for g in GEOMS})
+    patch = {f"{g}@friction": f"{mu:.9g} 0.005 {roll:.9g}" for g in GEOMS}
+    if len(x) > 7:
+        root = ET.fromstring(base_xml)
+        geom, inertial = root.find(".//geom[@name='can']"), root.find(INERTIAL)
+        r, half = (float(v) for v in geom.get("size").split())
+        m, beta = float(inertial.get("mass")), float(np.exp(x[7]))
+        axis, transverse = beta * m * r**2, m * (beta * r**2 / 2 + (2 * half) ** 2 / 12)
+        patch[f"{INERTIAL}@diaginertia"] = f"{transverse:.9g} {axis:.9g} {transverse:.9g}"  # body y is the can's axis
+    return patch
+
+
+def xml_for(base_xml: str, x: np.ndarray) -> str:
+    return apply_patch(base_xml, patch_for(base_xml, x))
+
+
+def s2_xml(base_xml: str, ramp_deg: float, radius: float, mass: float, half_length: float = 0.05) -> str:
+    """S2 twin from measurements: ramp angle, can radius and mass. shortcut: can length assumed 10 cm; it only
+    enters the transverse inertia, which a roll about the can's axis does not excite."""
+    root = ET.fromstring(base_xml)
+    root.find(".//body[@name='ramp']").set("euler", f"0 {ramp_deg:.6g} 0")
+    root.find(".//geom[@name='can']").set("size", f"{radius:.6g} {half_length:.6g}")
+    root.find(".//geom[@name='can']").set("mass", f"{mass:.6g}")
+    root.find(INERTIAL).set("mass", f"{mass:.6g}")
+    return xml_for(ET.tostring(root, encoding="unicode"), np.r_[np.log([1.0, 1e-6]), 0, 0, 0, 0, 0, np.log(1.0)])
 
 
 def ramp_frame(model: mujoco.MjModel) -> tuple[np.ndarray, np.ndarray]:
@@ -99,18 +129,20 @@ MOVING_MIN = 0.05  # m/s: frames slower than this say nothing about slip
 
 
 def classify_contact(t: np.ndarray, s_obs: np.ndarray, psi_obs: np.ndarray, radius: float) -> tuple[str, float]:
-    """Rolling vs sliding from the data's slip residual (master doc §2.5): median relative slip > 0.1 is sliding.
+    """Rolling vs sliding from the data's relative slip (master doc §2.5: > 0.1 is sliding).
 
+    Slip is measured as |slope - 1| of distance s against rolled distance psi * radius over the moving frames:
+    one least-squares line averages out stripe-angle noise that makes per-frame rate ratios unreliable.
     BIC cannot decide this: a free-mu sliding model with mu above the no-slip threshold rolls too.
     """
-    from perception.kinematics import SLIDING_EPS, slip
+    from perception.kinematics import SLIDING_EPS
     from perception.smoother import rts_smooth
 
     v = rts_smooth(t, s_obs, sigma=1e-3, q_tilde=50.0).states[:, 1]
-    w = rts_smooth(t, psi_obs, sigma=2e-2, q_tilde=500.0).states[:, 1]
     moving = np.abs(v) > MOVING_MIN
     if moving.sum() < 5:
         raise ValueError("too few moving frames to judge slip")
-    _, eps, _ = slip(v[moving], w[moving], radius)
-    med = float(np.median(eps))
-    return ("incline_sliding" if med > SLIDING_EPS else "incline_rolling"), med
+    rolled = (psi_obs - psi_obs[moving][0]) * radius
+    slope = np.polyfit(rolled[moving], s_obs[moving], 1)[0]
+    eps = float(abs(slope - 1.0)) if np.isfinite(slope) and abs(rolled[moving]).max() > 1e-3 else float("inf")
+    return ("incline_sliding" if eps > SLIDING_EPS else "incline_rolling"), eps

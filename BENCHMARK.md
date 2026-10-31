@@ -52,17 +52,29 @@
 ## Results (fill only from logged runs)
 
 ### Main metrics
-| Scenario | Arm | Held-out NRMSE | Mask IoU | Task success (N=256) | p_fail 95% UB | max torque / limit | min clearance (m) | Claims proposed / admitted | Wall-clock (s) | $ |
-|---|---|---|---|---|---|---|---|---|---|---|
-| S1 | A0 | | | | | | | | | |
-| S1 | A1 | | | | | | | | | |
-| S1 | A2 | | | | | | | | | |
-| S2 | A0 | | | | | | | | | |
-| S2 | A1 | | | | | | | | | |
-| S2 | A2 | | | | | | | | | |
-| S3 | A0 | | | | | | | | | |
-| S3 | A1 | | | | | | | | | |
-| S3 | A2 | | | | | | | | | |
+_Filled by `bench/run_all.py` on 2026-10-31 20:24 from `bench/results.json`._
+
+| Scenario | Arm | Twin structure | Held-out NRMSE | Task success (N=256) | p_fail 95% UB | max commanded torque / limit | Claims proposed / admitted | Wall-clock (s) |
+|---|---|---|---|---|---|---|---|---|
+| S1 real | A0 | nominal (no identification) | take1_s1: 3.5%, take2_s1: 4.5% | 100.0% | 1.2% | 0.48 | 1 / 1 | — |
+| S1 real | A1 | pendulum_viscous_coulomb | take1_s1: 1.5%, take2_s1: 2.2% | 100.0% | 1.2% | 0.63 | 7 / 7 | 236 |
+| S1 real | A2 | pendulum_coulomb | take1_s1: 0.8%, take2_s1: 1.9% | **no controller shipped** (refused) | — | — | 7 / 0 | 236 |
+| S1 synthetic | A0 | nominal (no identification) | last 30%: 352.1% | 100.0% | 1.2% | 0.12 | 1 / 1 | — |
+| S1 synthetic | A1 | pendulum_viscous_coulomb | last 30%: 4.3% | 100.0% | 1.2% | 0.21 | 6 / 6 | 210 |
+| S1 synthetic | A2 | pendulum_viscous_coulomb | last 30%: 4.3% | 100.0% | 1.2% | 0.09 | 6 / 1 | 210 |
+
+**At this disturbance level every shipped controller holds every reality sample, so the control task does not separate the arms.** The separation shows in held-out prediction, and in A2 refusing to ship where the twin is inadequate. The task and the motor sizing were fixed before these runs and are not tuned to produce a difference.
+
+- **S1 real**: reality = take1_s1 re-identified (pendulum_viscous_coulomb). A2 refusal: G1: innovations not white (Ljung-Box p=7.93e-06); unmodelled dynamics remain
+- **S1 synthetic**: reality = known synthetic physics.
+- Task: hold upright for 5 s from |Δθ| ≤ 0.2 rad, |ω| ≤ 0.5 rad/s; success = |Δθ| ≤ 0.05 rad at 5 s. The actuator clamps to the reality twin's limit; a commanded/limit ratio > 1 means the controller asked for more than the motor has.
+- Mask IoU, min clearance and $ are not measured (no rendered-twin IoU; S1 has no contacts; per-call costs not logged).
+
+**H1 (held-out NRMSE, A2 < A0 and A1):**
+- A2 vs A0: A2 better on 3/3 paired units; one-sided Wilcoxon p = 0.125 (smallest attainable with 3 pairs: 0.125).
+- A2 vs A1: A2 better on 2/3 paired units; one-sided Wilcoxon p = 0.250 (smallest attainable with 3 pairs: 0.125).
+- **H1 cannot reach α = 0.05 with this many units** (needs ≥ 5 pairs, all favouring A2). More held-out takes (S1 re-film, S2) add units.
+
 
 ### Ablations
 | Variant | Removed | Metric | S1 | S2 | S3 |
@@ -74,16 +86,21 @@
 | Uniform vs posterior-guided falsification | Sampling | failures / 100 rollouts | | | |
 
 ### Verifier seeded-bad self-test (H3)
+_Filled by `bench/run_all.py` on 2026-10-31 20:24._
+
 | Mutation class | n injected | Caught | First catching gate | False rejects on known-good (n) |
 |---|---|---|---|---|
-| Negative damping | | | | |
-| Destabilizing gains | | | | |
-| Torque limit ×0.3 | | | | |
-| Hinge offset 5 cm | | | | |
-| Goal edit | | | | |
-| `disableflags` / gravity off | | | | |
-| Direct `qpos` write | | | | |
-| **Total** | | | | |
+| negative damping | 1 | yes | G0 | — |
+| destabilizing gains | 1 | yes | G2 | — |
+| torque limit x0.3 | 1 | yes | G3 | — |
+| hinge offset 5 cm | 1 | yes | G1 | — |
+| goal edit | 1 | yes | G7 | — |
+| gravity off | 1 | yes | G7 | — |
+| direct qpos write | 1 | yes | G7 | — |
+| **Total** | 7 | 7 | G0: 1, G1: 1, G2: 1, G3: 1, G7: 3 | 0 of 3 |
+
+Catch rate 7/7; one-sided 95% Clopper–Pearson lower bound 0.652. H3 **passes**.
+
 
 ### Glimmer eval (H4; 200 held-out rows)
 | Model | Top-1 fix accuracy | JSON validity | Median latency (s) | p95 latency (s) | $/1k calls |

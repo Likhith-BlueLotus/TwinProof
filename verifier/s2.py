@@ -3,20 +3,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from physics.identify_s2 import GEOMS, residuals, xml_for
+from physics.identify_s2 import patch_for, residuals
 from physics.ou import ou_innovations
 from verifier.gates import GateResult, g0_admissible, g1_heldout, g7_patch_guard
 
 
-def friction_patch(x: np.ndarray) -> dict[str, str]:
-    """The MJCF patch a fitted x stands for (what G7 and G0 judge)."""
-    mu, roll = np.exp(x[:2])
-    return {f"{g}@friction": f"{mu:.9g} 0.005 {roll:.9g}" for g in GEOMS}
-
-
 def verify_s2_structure(base_xml: str, x: np.ndarray, t: np.ndarray, s_obs: np.ndarray, psi_obs: np.ndarray,
                         n_fit: int, release0: float, r_s: float, extra_patch: dict[str, str] | None = None) -> dict[str, GateResult]:
-    patch = {**friction_patch(x), **(extra_patch or {})}
+    patch = {**patch_for(base_xml, x), **(extra_patch or {})}  # exactly what the twin simulates
     gates = {"G7": g7_patch_guard(base_xml, patch, None, 0.0)}
     if not gates["G7"].passed:
         return gates

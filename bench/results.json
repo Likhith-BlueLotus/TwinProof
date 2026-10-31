@@ -1,0 +1,180 @@
+{
+ "scenarios": {
+  "S1 real": {
+   "reality": "take1_s1 re-identified (pendulum_viscous_coulomb)",
+   "arms": {
+    "A0": {
+     "structure": "nominal (no identification)",
+     "heldout_nrmse": {
+      "take1_s1": 0.03462370921300163,
+      "take2_s1": 0.04459831161718945
+     },
+     "claims": "1 / 1",
+     "wall_clock_s": null,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.47938249419166895,
+      "u_limit": 0.59674,
+      "K": [
+       1.1116319080459482,
+       0.1381165626037401
+      ]
+     }
+    },
+    "A1": {
+     "structure": "pendulum_viscous_coulomb",
+     "heldout_nrmse": {
+      "take1_s1": 0.01488644147301772,
+      "take2_s1": 0.02154108858333685
+     },
+     "claims": "7 / 7",
+     "wall_clock_s": 236.44080805778503,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.6339501813571512,
+      "u_limit": 0.59674,
+      "K": [
+       1.166622801881843,
+       0.33590483069888266
+      ]
+     }
+    },
+    "A2": {
+     "structure": "pendulum_coulomb",
+     "heldout_nrmse": {
+      "take1_s1": 0.007757868412752127,
+      "take2_s1": 0.018948539896506498
+     },
+     "claims": "7 / 0",
+     "wall_clock_s": 236.44080805778503,
+     "control": null,
+     "refusal": "G1: innovations not white (Ljung-Box p=7.93e-06); unmodelled dynamics remain"
+    }
+   }
+  },
+  "S1 synthetic": {
+   "reality": "known synthetic physics",
+   "arms": {
+    "A0": {
+     "structure": "nominal (no identification)",
+     "heldout_nrmse": {
+      "last 30%": 3.521455671061976
+     },
+     "claims": "1 / 1",
+     "wall_clock_s": null,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.12085283275511642,
+      "u_limit": 2.5,
+      "K": [
+       1.194479563809029,
+       0.1560255241182664
+      ]
+     }
+    },
+    "A1": {
+     "structure": "pendulum_viscous_coulomb",
+     "heldout_nrmse": {
+      "last 30%": 0.04336342966032476
+     },
+     "claims": "6 / 6",
+     "wall_clock_s": 210.26851987838745,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.2061313320406437,
+      "u_limit": 2.5,
+      "K": [
+       1.6077635559830943,
+       0.42305609558448753
+      ]
+     }
+    },
+    "A2": {
+     "structure": "pendulum_viscous_coulomb",
+     "heldout_nrmse": {
+      "last 30%": 0.04336342966032476
+     },
+     "claims": "6 / 1",
+     "wall_clock_s": 210.26851987838745,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.08670473649883373,
+      "u_limit": 2.5,
+      "K": [
+       0.7199063841596426,
+       0.15031635264010576
+      ]
+     }
+    }
+   }
+  }
+ },
+ "seeded_bad": {
+  "rows": {
+   "negative damping": {
+    "caught": true,
+    "first_gate": "G0"
+   },
+   "destabilizing gains": {
+    "caught": true,
+    "first_gate": "G2"
+   },
+   "torque limit x0.3": {
+    "caught": true,
+    "first_gate": "G3"
+   },
+   "hinge offset 5 cm": {
+    "caught": true,
+    "first_gate": "G1"
+   },
+   "goal edit": {
+    "caught": true,
+    "first_gate": "G7"
+   },
+   "gravity off": {
+    "caught": true,
+    "first_gate": "G7"
+   },
+   "direct qpos write": {
+    "caught": true,
+    "first_gate": "G7"
+   }
+  },
+  "caught": 7,
+  "n": 7,
+  "first_gate_counts": {
+   "G0": 1,
+   "G2": 1,
+   "G3": 1,
+   "G1": 1,
+   "G7": 3
+  },
+  "false_rejects": [],
+  "catch_lower_95": 0.6518363448688392
+ },
+ "h1": {
+  "A0": {
+   "pairs": 3,
+   "a2_better": 3,
+   "p_one_sided": 0.125,
+   "min_attainable_p": 0.125
+  },
+  "A1": {
+   "pairs": 3,
+   "a2_better": 2,
+   "p_one_sided": 0.25,
+   "min_attainable_p": 0.125
+  }
+ },
+ "seconds": 448.4190969467163
+}

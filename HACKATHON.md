@@ -16,6 +16,8 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-30 | | | FastAPI backend (runs, ghost-overlay geometry, what-if re-verify, live start); React web UI (design tokens via ui-ux-pro-max, motion via emil-design-eng): video + ghost twin, phase portrait, verdict card with gate chips, replayable claim stream, what-if bar | Claude Code | `tests/test_api.py`; overlay within 8 px median of the true bar tip |
 | 2026-10-30 | | | S2 incline: MuJoCo ramp + can (rolling 1.658 vs 1.693 m/s² theory, sliding exact), slip-residual contact classification, μ identification, G7/G0/G1 verdicts; Glimmer SFT generator (6 fix classes, seed-split); README | Claude Code | `tests/test_identify_s2.py`, `tests/test_glimmer_sft.py` |
 | 2026-10-31 | | | Real S1 footage: marker consensus filter, cross-take registration, measured-geometry twin; Coulomb-only structure; twin selection by BIC among identifiable fits; per-run model in the API. Held-out takes predicted at 0.78% / 1.89% NRMSE; G1 whiteness refuses certification | Claude Code; SAM 3.1; Muse Spark 1.3 (dev fallback) | `logs/runs/S1_REAL.md` |
+| 2026-10-31 | | | Three-arm benchmark (`bench/run_all.py`): held-out NRMSE real S1 A2 0.8/1.9% vs A1 1.5/2.2% vs A0 3.5/4.5%; A2 ships no controller on the real rig (G1); control task does not separate arms (all 100%); H3 7/7, 0 false rejects; H1 underpowered (3 units) | Claude Code | `bench/results.json`, BENCHMARK.md tables |
+| 2026-10-31 | | | Real S2 footage: SAM tracking ("silver disc"), stripe rotation, radius-based scale correction, straight-run window; fitted can inertia (β); slip by line fit; take 1 → β 0.78 ± 4.5%, held-out take 2 at 1.5% NRMSE, take 3 at 8.0%; G1 whiteness refuses narrowly (p 0.044) | Claude Code; SAM 3.1 | `logs/runs/S2_REAL.md` |
 
 ## Pre-registration
 
@@ -29,7 +31,9 @@ BENCHMARK.md pre-registration commit: **`84cf77a`** (2026-10-30 21:49 IST, pushe
   - rig reuse for poorly conditioned takes (`--rig-from`)
   - a `--start` trim for the hand release
 - **Fixed:** twin selection (best-BIC identifiable fit, independent of the order parallel fits finish in).
-- **Took measured inputs:** bar length 33 cm, mass 200 g, marker side 70 mm.
+- **Took measured inputs:** bar length 33 cm, mass 200 g, marker side 70 mm. For S2: can r 3.25 cm, mass 68.5 g, ramp 12° and 35.5 cm.
+- **S2 changes (after footage):** fitted can inertia ratio β (whitelisted inertial); slip measured by a line fit instead of a per-frame median.
+- **Not used as data:** the two AI-generated clips in `data/videos/synthetic/` (Google encoder).
 
 ## Clean-room statement
 

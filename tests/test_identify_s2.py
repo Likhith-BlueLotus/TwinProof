@@ -27,7 +27,7 @@ def _take(mu, roll, seed):
 def _fit(t, s, psi, structure):
     n = int(0.7 * t.size)
     lower, upper = bounds(structure)
-    x0 = np.clip(np.r_[np.log([0.5, 1e-4, 5.0, 0.01]), 0, 0, 0], lower, upper)
+    x0 = np.clip(np.r_[np.log([0.5, 1e-4, 5.0, 0.01]), 0, 0, 0, np.log(0.7)], lower, upper)
     obj = make_objective(S2, t[:n], s[:n], psi[:n], release_time(t, s), MEAS_S**2, MEAS_PSI**2, x0)
     x, j = fit(obj, x0, 1.0, lower, upper, seed=0, max_evals=EVALS)
     return x, j, obj, n
@@ -90,3 +90,14 @@ def test_s2_verdicts(sliding_take):
     assert not hack["G7"].passed and "G0" not in hack
     xr, _, _, _ = _fit(t, s, psi, "incline_rolling")
     assert not verify_s2_structure(S2, xr, *args[2:])["G1"].passed
+
+
+@pytest.mark.parametrize("beta", [0.5, 0.8, 1.0])
+def test_measured_twin_rolls_at_theoretical_acceleration(beta):
+    from physics.identify_s2 import s2_xml
+    model = mujoco.MjModel.from_xml_string(xml_for(s2_xml(S2, 12.0, 0.0325, 0.0685), np.r_[np.log([1.0, 1e-6]), 0, 0, 0, 0, 0, np.log(beta)]))
+    t = np.arange(0, 0.8, 1 / FPS)
+    s, psi = simulate(model, t, 0.0)
+    accel = np.polyfit(t[5:], s[5:], 2)[0] * 2
+    assert accel == pytest.approx(9.81 * np.sin(np.radians(12)) / (1 + beta), rel=0.01)
+    assert s[-1] / (psi[-1] * 0.0325) == pytest.approx(1.0, abs=0.01)  # no slip

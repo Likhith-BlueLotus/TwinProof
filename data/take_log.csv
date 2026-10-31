@@ -2,3 +2,6 @@ scenario,take,file,marker_side_mm,camera_Z_m,delta_z_mm,release_angle_deg,ramp_a
 s1_pendulum,1,data/videos/s1_pendulum/take1.mp4,70,1.0,5,22,,200,330,,37,-74,"held out; marker hidden all take (registered to take 3); start 0.7 s; 848x478 export"
 s1_pendulum,2,data/videos/s1_pendulum/take2.mp4,70,1.0,5,13,,200,330,,37,-74,"held out; marker hidden; small swing so pivot reused from take 3; start 1.5 s"
 s1_pendulum,3,data/videos/s1_pendulum/take3.mp4,70,1.0,5,32,,200,330,,37,-74,"identification take; marker clean on early frames; start 0.7 s; pin held by fingers"
+s2_incline,1,data/videos/s2_incline/take1.mp4,70,,,,12,68.5,355,32.5,,,"identification take; rolls (slip 0.2%); scale corrected by can radius (0.905); ramp length in body_length_mm"
+s2_incline,2,data/videos/s2_incline/take2.mp4,70,,,,12,68.5,355,32.5,,,"held out; rolls (slip 4.4%)"
+s2_incline,3,data/videos/s2_incline/take3.mp4,70,,,,12,68.5,355,32.5,,,"held out; borderline slip 11.6% (possible skid at release)"
