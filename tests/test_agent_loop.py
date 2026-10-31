@@ -73,3 +73,28 @@ def test_bad_tool_input_comes_back_as_feedback():
     turn, _ = _script([("submit_claim", {"ref": "nope"}), ("no_such_tool", {}), ("synthesize_controller", {"kind": "pd_impedance", "u_max": 1})])
     agent_loop(ctx, turn)
     assert ctx.records == []
+
+
+def test_twin_is_best_bic_identifiable_fit_whatever_order_fits_finish():
+    from agents.dispatch import _select_twin
+    events = []
+    ctx = _ctx(events)
+    good, bad = object(), object()
+    ctx.fits["pendulum_coulomb"] = {"evidence": good, "ok": True, "why": "identifiable", "bic": -1438.0, "payload": {"s": "c"}}
+    _select_twin(ctx)
+    ctx.fits["pendulum_viscous_coulomb"] = {"evidence": bad, "ok": False, "why": "flat", "bic": -1471.0, "payload": {"s": "vc"}}
+    _select_twin(ctx)  # better BIC but unidentifiable, and it finished last: must not win
+    assert ctx.evidence is good and ctx.refusal is None and ctx.twin_structure == "pendulum_coulomb"
+    assert [d for k, d in events if k == "evidence"] == [{"s": "c"}]
+
+
+def test_refusal_when_no_fit_is_identifiable_is_logged_as_a_verdict():
+    from agents.dispatch import _select_twin
+    events = []
+    ctx = _ctx(events)
+    ctx.fits["pendulum_viscous_coulomb"] = {"evidence": object(), "ok": False, "why": "flat", "bic": -1.0, "payload": {}}
+    _select_twin(ctx)
+    turn, _ = _script([("synthesize_controller", {"kind": "lqr", "u_max": 2.5})], [("submit_claim", {"ref": "c-1"})])
+    agent_loop(ctx, turn)
+    assert ctx.records[-1]["verdict"] == "REFUSED" and "not identifiable" in ctx.records[-1]["reason"]
+    assert any(k == "verdict" and d["verdict"] == "REFUSED" for k, d in events)

@@ -69,6 +69,17 @@ def _track(stem: str) -> tuple[dict, dict]:
     return json.loads(meta_path.read_text()), {k: data[k] for k in data.files}
 
 
+def _model_path(meta: dict) -> Path:
+    """The run's own twin (measured geometry) when the track has one, else the base S1 model."""
+    if not meta.get("model"):
+        return MODEL
+    path = (ROOT / meta["model"]).resolve()
+    allowed = (RUNS.resolve(), MODEL.parent.resolve())
+    if not any(a in path.parents for a in allowed) or path.suffix != ".xml" or not path.exists():
+        raise HTTPException(500, "track metadata points at an invalid model")
+    return path
+
+
 def _summary(run_id: str, events: list[dict]) -> dict:
     provider = next((e["data"] for e in events if e["kind"] == "provider"), {})
     verdicts = [e["data"] for e in events if e["kind"] == "verdict"]
@@ -97,7 +108,7 @@ def get_run(run_id: str) -> dict:
 def _overlay(meta: dict, track: dict, evidence: dict) -> dict:
     """Ghost twin in image pixels per video frame, and a phase portrait at the identification rate."""
     x, (t0, q0, v0) = np.asarray(evidence["x"]), evidence["start"]
-    base = MODEL.read_text()
+    base = _model_path(meta).read_text()
     fps = 60.0
     t_video = np.arange(t0, t0 + meta["frames"] / fps, 1 / fps)
     phi_twin_video = predict(base, x, t_video, (q0, v0))  # measured-angle space, same frame as the SAM track
@@ -105,7 +116,9 @@ def _overlay(meta: dict, track: dict, evidence: dict) -> dict:
     pivot = np.asarray(meta["pivot_m"])
     down = np.asarray(meta["down"], float) / np.linalg.norm(meta["down"])
     right = np.array([down[1], -down[0]])  # swing_angle measures phi positive toward this direction
-    length = 2 * meta["pivot_radius_m"]  # centroid of a uniform bar sits at half its length
+    r = meta["pivot_radius_m"]
+    # tip of a uniform bar: (L + 2r)/2 below the pivot; without a measured length assume the pivot is at the end
+    length = (meta["bar_length_m"] + 2 * r) / 2 if meta.get("bar_length_m") else 2 * r
     tips = pivot + length * (np.sin(phi_twin_video)[:, None] * right + np.cos(phi_twin_video)[:, None] * down)
 
     def to_px(pts: np.ndarray) -> list[list[float]]:
@@ -143,10 +156,10 @@ def what_if(run_id: str, body: WhatIf) -> dict:
     if evidence is None or not admitted:
         raise HTTPException(409, "this run has no admitted controller to re-verify")
     spec = next(e["data"]["spec"] for e in events if e["kind"] == "claim" and e["data"]["ref"] == admitted[-1])
-    _, track = _track(_track_stem(run_id, events))
+    meta, track = _track(_track_stem(run_id, events))
     n = evidence["n_fit"]
     t, phi = track["t"], track["phi"]
-    ev = Evidence(MODEL.read_text(), np.asarray(evidence["x"]), np.asarray(evidence["cov"]), t[:n], phi[:n], t[n:], phi[n:],
+    ev = Evidence(_model_path(meta).read_text(), np.asarray(evidence["x"]), np.asarray(evidence["cov"]), t[:n], phi[:n], t[n:], phi[n:],
                   tuple(evidence["start"]), float(track["r_meas"]), goal=GOAL, success_tol=0.05)
     ctx = Context(ev.base_xml, t, phi, float(track["r_meas"]), emit=lambda *_: None, evidence=ev, last_controller=admitted[-1])
     gains = spec.get("gains")
@@ -160,7 +173,8 @@ def start_live(track: str = "s1_s1") -> dict:
     """Start a live agent run on a recorded track; poll /api/runs/{id} for events."""
     if not re.fullmatch(r"[A-Za-z0-9_]+", track):
         raise HTTPException(400, "malformed track name")
-    _, data = _track(track)
+    meta, data = _track(track)
+    model = _model_path(meta)
     api, provider, slug = resolve()
     run_id = f"agent_{track}_{time.strftime('%Y%m%dT%H%M%S')}"
     log = (RUNS / f"{run_id}.jsonl").open("w")
@@ -171,10 +185,10 @@ def start_live(track: str = "s1_s1") -> dict:
             log.write(json.dumps({"t": time.time(), "kind": kind, "data": payload}, default=float) + "\n")
             log.flush()
 
-    emit("session", {"track": f"logs/runs/{track}.npz", "model": str(MODEL.relative_to(ROOT))})
+    emit("session", {"track": f"logs/runs/{track}.npz", "model": str(model.relative_to(ROOT))})
     emit("provider", {"provider": provider, "slug": slug})
     ok = np.isfinite(data["phi"])
-    ctx = Context(MODEL.read_text(), data["t"][ok], data["phi"][ok], float(data["r_meas"]), emit, proposer=f"{provider}:{slug}")
+    ctx = Context(model.read_text(), data["t"][ok], data["phi"][ok], float(data["r_meas"]), emit, proposer=f"{provider}:{slug}")
 
     def run() -> None:
         try:

@@ -64,3 +64,16 @@ def test_composite_loss_penalises_prior_and_violated_margins():
     ok = composite_loss(phi=np.zeros(2), margins=np.array([1.0]), **base)
     assert composite_loss(phi=np.ones(2), margins=np.array([1.0]), **base) == pytest.approx(ok + 2)
     assert composite_loss(phi=np.zeros(2), margins=np.array([-0.01]), **base) > ok + 5
+
+
+def test_pendulum_xml_matches_measured_geometry():
+    from physics.identify_s1 import pendulum_xml
+    from physics.reset import set_state
+    m = mujoco.MjModel.from_xml_string(pendulum_xml(S1, length=0.30, centroid_radius=0.13, mass=0.05))
+    d = mujoco.MjData(m)
+    set_state(m, d, np.zeros(1), np.zeros(1))
+    assert m.body_mass[1] == pytest.approx(0.05)
+    assert np.linalg.norm(d.xipos[1] - d.xanchor[0]) == pytest.approx(0.13, abs=1e-3)  # centroid below the pivot
+    assert m.actuator_ctrlrange[0, 1] == pytest.approx(2 * 0.05 * 9.81 * 0.13, rel=1e-3)
+    with pytest.raises(ValueError):
+        pendulum_xml(S1, length=0.2, centroid_radius=0.15, mass=0.05)

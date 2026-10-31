@@ -40,3 +40,33 @@ def test_missing_masks_become_nan():
     H = np.eye(3)
     tr = tracks({}, np.arange(3) / 60, H, plane_grid(H, 10, 10), [1])[1]
     assert np.all(np.isnan(tr.xy)) and np.all(np.isnan(tr.theta))
+
+
+def test_consistency_filter_drops_partially_occluded_decodes():
+    from perception.extract import consistent_corners
+    good = np.array([[100, 100], [158.6, 100], [158.6, 158.6], [100, 158.6]])
+    clipped = good.copy()
+    clipped[[0, 3], 0] += 2.0  # an occluder ate the left edge: side shrinks, centre jumps
+    kept = consistent_corners([good + 0.01 * k for k in range(6)] + [clipped, clipped])
+    assert len(kept) == 6
+
+
+def test_camera_shift_recovers_a_subpixel_translation(tmp_path):
+    import subprocess
+    from perception.extract import camera_shift
+    rng = np.random.default_rng(0)
+    base = cv2.GaussianBlur((rng.random((240, 320)) * 255).astype(np.uint8), (0, 0), 2)
+    base = cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
+    true = (0.6, -1.4)
+    shifted = cv2.warpAffine(base, np.float32([[1, 0, true[0]], [0, 1, true[1]]]), (320, 240), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+    paths = []
+    for name, img in (("ref", base), ("moved", shifted)):
+        path = tmp_path / f"{name}.mp4"
+        enc = subprocess.Popen(["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", "320x240",
+                                "-r", "30", "-i", "-", "-c:v", "libx264", "-crf", "8", "-pix_fmt", "yuv444p", str(path)], stdin=subprocess.PIPE)
+        enc.stdin.write(np.repeat(img[None], 20, 0).tobytes())
+        enc.stdin.close()
+        assert enc.wait() == 0
+        paths.append(path)
+    shift, n = camera_shift(*paths)
+    assert n >= 5 and np.allclose(shift, true, atol=0.15), (shift, n)

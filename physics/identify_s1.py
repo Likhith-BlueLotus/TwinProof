@@ -32,6 +32,26 @@ LAM_PRIOR = 1e-3  # weak pull to x0; frozen in BENCHMARK.md before held-out eval
 CAL_PRIOR_SD = 1.0  # calibration coefficients ~ N(0, (OBS_SCALE * 1)^2) = +-2%: a measured marker bounds homography error
 
 
+MOTOR_GRAVITY_RATIO = 2.0  # twin motor limit = 2 m g r: can hold the bar upright with margin, so G3 stays meaningful
+
+
+def pendulum_xml(base_xml: str, length: float, centroid_radius: float, mass: float) -> str:
+    """S1 twin for a uniform bar of `length` whose centroid hangs `centroid_radius` below the pivot.
+
+    The bar extends (L - 2r)/2 above the pivot and (L + 2r)/2 below it; geometry comes from the video,
+    mass from a scale.
+    """
+    import re
+
+    if not 0 < 2 * centroid_radius <= length:
+        raise ValueError(f"centroid radius {centroid_radius:.3f} m is inconsistent with bar length {length:.3f} m")
+    top, bottom = (length - 2 * centroid_radius) / 2, (length + 2 * centroid_radius) / 2
+    limit = MOTOR_GRAVITY_RATIO * mass * 9.81 * centroid_radius
+    xml = re.sub(r'fromto="[^"]*"', f'fromto="0 0 {top:.5f} 0 0 {-bottom:.5f}"', base_xml, count=1)
+    xml = re.sub(r'(<geom name="rod"[^>]*mass=")[^"]*"', rf'\g<1>{mass:.5g}"', xml)
+    return re.sub(r'ctrlrange="[^"]*"', f'ctrlrange="{-limit:.5g} {limit:.5g}"', xml)
+
+
 def xml_for(base_xml: str, x: np.ndarray) -> str:
     b, fl = np.exp(x[:2])
     return apply_patch(base_xml, {f"{JOINT}@damping": f"{b:.9g}", f"{JOINT}@frictionloss": f"{fl:.9g}"})

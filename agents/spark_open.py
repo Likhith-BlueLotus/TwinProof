@@ -21,7 +21,7 @@ CANDIDATES = [
 ]
 RAW_CHUNKS_LOGGED = 20  # day-1: confirm reasoning/commentary field names
 
-STRUCTURES = ["pendulum_viscous", "pendulum_viscous_coulomb"]
+STRUCTURES = ["pendulum_viscous", "pendulum_coulomb", "pendulum_viscous_coulomb"]
 TOOLS = [
     {"type": "function", "function": {
         "name": "fit_batch",

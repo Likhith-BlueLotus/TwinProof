@@ -1,1 +1,4 @@
 scenario,take,file,marker_side_mm,camera_Z_m,delta_z_mm,release_angle_deg,ramp_angle_deg,body_mass_g,body_length_mm,radius_mm,pivot_x_mm,pivot_y_mm,notes
+s1_pendulum,1,data/videos/s1_pendulum/take1.mp4,70,1.0,5,22,,200,330,,37,-74,"held out; marker hidden all take (registered to take 3); start 0.7 s; 848x478 export"
+s1_pendulum,2,data/videos/s1_pendulum/take2.mp4,70,1.0,5,13,,200,330,,37,-74,"held out; marker hidden; small swing so pivot reused from take 3; start 1.5 s"
+s1_pendulum,3,data/videos/s1_pendulum/take3.mp4,70,1.0,5,32,,200,330,,37,-74,"identification take; marker clean on early frames; start 0.7 s; pin held by fingers"

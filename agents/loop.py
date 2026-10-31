@@ -27,7 +27,7 @@ def agent_loop(ctx: Context, turn: TurnFn) -> str | None:
             results = list(pool.map(lambda c: _run(c, ctx), calls))
         for c, r in zip(calls, results):
             msgs.append({"role": "tool", "tool_call_id": c["id"], "content": json.dumps(r, default=float)})
-            if r.get("verdict") == "REJECTED":
+            if r.get("verdict") in ("REJECTED", "REFUSED"):
                 rejects += 1
             elif r.get("verdict") == "ADMITTED":
                 rejects = 0

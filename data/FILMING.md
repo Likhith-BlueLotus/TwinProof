@@ -48,6 +48,13 @@ Film these with a **second phone or a friend**, while the tripod phone records t
 - **Optional:** the same three shots for the incline.
 Only footage you film yourself goes in the video.
 
+## Lessons from the first S1 takes (2026-10-31)
+- **Marker beside the pivot, not under it.** Below the pivot the bar covers it for the whole swing, and ArUco needs all four corners. Keep it within ~10 cm of the pivot, off to one side.
+- **Export at full resolution.** iPhone: AirDrop with Options → "All Photos Data", or copy the file directly. "Most compatible" sharing produced 848×478.
+- **Measure the printed marker.** The current print is **70 mm** (printer scaling; kept on purpose), so every run passes `--side 0.07`. Every metric distance scales with this number; it is recorded per take in `take_log.csv`.
+- **Fix the pin.** A pin held between fingers adds friction that changes from take to take; clamp the bolt.
+- **Swing at least 20°.** A 13° take could not separate the pivot or the friction.
+
 ## Where files go
 ```
 data/videos/static/s1.mp4  s2.mp4  s3.mp4

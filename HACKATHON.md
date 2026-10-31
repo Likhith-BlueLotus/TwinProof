@@ -15,10 +15,21 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-30 | | | Spark 1.3 scene nouns; agent loop (resolver, tools, dispatch, 6-reject stop); G1 measurement model (decimation, calibration, EKF innovations); cma seed-0 reproducibility fix; live agent on SAM-tracked 15 s synthetic take: 3 refused, c-4 admitted | Claude Code; Muse Spark 1.3 (dev fallback); SAM 3.1 | `logs/runs/agent_s1_s1_20261030T214459.jsonl` |
 | 2026-10-30 | | | FastAPI backend (runs, ghost-overlay geometry, what-if re-verify, live start); React web UI (design tokens via ui-ux-pro-max, motion via emil-design-eng): video + ghost twin, phase portrait, verdict card with gate chips, replayable claim stream, what-if bar | Claude Code | `tests/test_api.py`; overlay within 8 px median of the true bar tip |
 | 2026-10-30 | | | S2 incline: MuJoCo ramp + can (rolling 1.658 vs 1.693 m/s² theory, sliding exact), slip-residual contact classification, μ identification, G7/G0/G1 verdicts; Glimmer SFT generator (6 fix classes, seed-split); README | Claude Code | `tests/test_identify_s2.py`, `tests/test_glimmer_sft.py` |
+| 2026-10-31 | | | Real S1 footage: marker consensus filter, cross-take registration, measured-geometry twin; Coulomb-only structure; twin selection by BIC among identifiable fits; per-run model in the API. Held-out takes predicted at 0.78% / 1.89% NRMSE; G1 whiteness refuses certification | Claude Code; SAM 3.1; Muse Spark 1.3 (dev fallback) | `logs/runs/S1_REAL.md` |
 
 ## Pre-registration
 
-BENCHMARK.md pre-registration commit: _(fill on Sat before any held-out evaluation)_
+BENCHMARK.md pre-registration commit: **`84cf77a`** (2026-10-30 21:49 IST, pushed). The first real footage was written 2026-10-31 19:03, so every threshold, the λ weights and the G1 definition predate real data.
+
+**Changes after seeing real footage:** perception and structure list only; no threshold changed.
+- **Added:**
+  - the `pendulum_coulomb` structure (dry friction only); the existing two could not represent the rig
+  - the marker consensus filter
+  - cross-take camera registration (`--marker-from`)
+  - rig reuse for poorly conditioned takes (`--rig-from`)
+  - a `--start` trim for the hand release
+- **Fixed:** twin selection (best-BIC identifiable fit, independent of the order parallel fits finish in).
+- **Took measured inputs:** bar length 33 cm, mass 200 g, marker side 70 mm.
 
 ## Clean-room statement
 
