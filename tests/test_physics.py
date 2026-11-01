@@ -29,7 +29,8 @@ def test_patch_changes_whitelisted_field():
 
 @pytest.mark.parametrize(
     "key",
-    [".//option@timestep", ".//option@gravity", ".//motor[@name='tau']@ctrlrange", ".//joint@nonexistent", "damping"],
+    [".//option@timestep", ".//option@gravity", ".//motor[@name='tau']@ctrlrange", ".//joint@nonexistent", "damping",
+     ".//motor[@name='tau']@gear"],  # gear scales delivered torque past the ctrlrange that G3 checks
 )
 def test_patch_refuses_off_whitelist(key):
     with pytest.raises(PatchRejected):

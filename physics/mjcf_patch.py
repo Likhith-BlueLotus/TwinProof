@@ -7,9 +7,7 @@ WHITELIST: dict[str, frozenset[str]] = {
     "joint": frozenset({"pos", "damping", "frictionloss", "armature"}),
     "geom": frozenset({"friction", "solref", "solimp", "mass"}),
     "inertial": frozenset({"mass", "diaginertia"}),
-    "motor": frozenset({"gear"}),
-    "position": frozenset({"kp", "gear"}),
-}
+}  # no actuator fields: gear or kp would change the authority G3 bounds against ctrlrange
 
 
 class PatchRejected(ValueError):

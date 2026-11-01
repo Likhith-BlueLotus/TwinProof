@@ -70,6 +70,11 @@ def _is_state(name: str) -> bool:
     return len(parts) > 1 and (parts[-1] in STATE_ATTRS or "opt" in parts[1:])
 
 
+def scan_claim(code: dict[str, str]) -> list[str]:
+    """Agent-submitted code is never the reset module, whatever path it claims to be."""
+    return [v for path, src in code.items() for v in scan_source(src, f"claim/{path}")]
+
+
 def scan_source(source: str, path: str) -> list[str]:
     """Violations as 'path:line: reason'; empty means the file passes."""
     path = Path(path).as_posix()

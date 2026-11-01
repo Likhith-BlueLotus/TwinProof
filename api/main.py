@@ -12,7 +12,9 @@ from functools import partial
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from urllib.parse import urlparse
+
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -29,6 +31,8 @@ VIDEOS = ROOT / "data" / "videos"
 MODEL = ROOT / "physics" / "models" / "s1_pendulum.xml"
 RUN_ID = re.compile(r"^(agent|verify)_[A-Za-z0-9_]+_\d{8}T\d{6}$")  # verify_: S2 verifier runs, no agent
 GOAL = float(np.pi)
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+HEAVY = threading.Lock()  # one live run or what-if at a time: each one saturates the CPU or spends provider credit
 
 app = FastAPI(title="TwinProof")
 
@@ -50,8 +54,27 @@ def _log_path(run_id: str) -> Path:
     return path
 
 
+def _event(line: str) -> dict | None:
+    try:
+        return json.loads(line)
+    except json.JSONDecodeError:  # a live run's last line can be half-written while we read
+        return None
+
+
 def _events(run_id: str) -> list[dict]:
-    return [json.loads(line) for line in _log_path(run_id).read_text().splitlines() if line.strip()]
+    return [e for e in map(_event, _log_path(run_id).read_text().splitlines()) if e is not None]
+
+
+def local_origin(request: Request) -> None:
+    """Browsers send Origin on cross-site POSTs; a page on another site must not drive this local server."""
+    origin = request.headers.get("origin")
+    if origin is not None and urlparse(origin).hostname not in LOCAL_HOSTS:
+        raise HTTPException(403, "requests from other websites are refused")
+
+
+def _claim_heavy() -> None:
+    if not HEAVY.acquire(blocking=False):
+        raise HTTPException(429, "a live run or what-if is already running; try again when it finishes")
 
 
 def _track_stem(run_id: str, events: list[dict]) -> str:
@@ -200,9 +223,17 @@ def _video_path(meta: dict) -> Path | None:
     return path if VIDEOS.resolve() in path.parents and path.exists() else None
 
 
-@app.post("/api/runs/{run_id}/whatif")
+@app.post("/api/runs/{run_id}/whatif", dependencies=[Depends(local_origin)])
 def what_if(run_id: str, body: WhatIf) -> dict:
     """Re-verify the run's admitted controller under changed physics (operator input, not an agent patch)."""
+    _claim_heavy()
+    try:
+        return _what_if(run_id, body)
+    finally:
+        HEAVY.release()
+
+
+def _what_if(run_id: str, body: WhatIf) -> dict:
     events = _events(run_id)
     evidence = next((e["data"] for e in reversed(events) if e["kind"] == "evidence"), None)
     admitted = [e["data"]["claim_id"] for e in events if e["kind"] == "verdict" and e["data"]["verdict"] == "ADMITTED"
@@ -222,11 +253,20 @@ def what_if(run_id: str, body: WhatIf) -> dict:
     return reverify(body.model_dump(exclude_none=True), ctx)
 
 
-@app.post("/api/runs/live")
+@app.post("/api/runs/live", dependencies=[Depends(local_origin)])
 def start_live(track: str = "s1_s1") -> dict:
     """Start a live agent run on a recorded track; poll /api/runs/{id} for events."""
     if not re.fullmatch(r"[A-Za-z0-9_]+", track):
         raise HTTPException(400, "malformed track name")
+    _claim_heavy()  # released when the run's thread ends
+    try:
+        return _start_live(track)
+    except BaseException:
+        HEAVY.release()
+        raise
+
+
+def _start_live(track: str) -> dict:
     meta, data = _track(track)
     model = _model_path(meta)
     api, provider, slug = resolve()
@@ -252,6 +292,7 @@ def start_live(track: str = "s1_s1") -> dict:
             emit("final", {"text": None, "error": f"{type(err).__name__}: {err}"})
         finally:
             log.close()
+            HEAVY.release()
 
     threading.Thread(target=run, daemon=True).start()
     return {"id": run_id}

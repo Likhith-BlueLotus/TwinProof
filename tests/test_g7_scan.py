@@ -95,3 +95,8 @@ def test_ast_guard_rejects_out_and_put_writes(code):
 
 def test_reading_state_into_pure_functions_is_allowed():
     assert not scan_source("u = policy(data.qpos, data.qvel)\ng = np.linalg.norm(model.opt.gravity)", "physics/rollout.py")
+
+
+def test_claimed_code_cannot_borrow_the_reset_exemption():
+    from verifier.g7_scan import scan_claim
+    assert scan_claim({"physics/reset.py": "def f(d):\n    d.qpos[:] = 3\n"})

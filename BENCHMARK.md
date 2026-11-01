@@ -52,7 +52,7 @@
 ## Results (fill only from logged runs)
 
 ### Main metrics
-_Filled by `bench/run_all.py` on 2026-11-01 16:36 from `bench/results.json`._
+_Filled by `bench/run_all.py` on 2026-11-01 21:38 from `bench/results.json`._
 
 | Scenario | Arm | Twin structure | Held-out NRMSE | Task success (N=256) | p_fail 95% UB | max commanded torque / limit | Claims proposed / admitted | Wall-clock (s) |
 |---|---|---|---|---|---|---|---|---|
@@ -85,8 +85,8 @@ _Filled by `bench/run_all.py` on 2026-11-01 16:36 from `bench/results.json`._
 - Mask IoU, min clearance and $ are not measured (no rendered-twin IoU; S1 has no contacts; per-call costs not logged).
 
 **H1 (held-out NRMSE, A2 < A0 and A1):**
-- A2 vs A0: A2 better on 6/11 paired units; one-sided Wilcoxon p = 0.160 (smallest attainable with 11 pairs: 0.00049).
-- A2 vs A1: A2 better on 2/7 paired units (5 exact ties: both arms chose the same twin); one-sided Wilcoxon p = 0.250 (smallest attainable with 7 pairs: 0.0078).
+- A2 vs A0: A2 better on 6/11 paired units; one-sided Wilcoxon p = 0.160 (smallest attainable with 11 untied pairs: 0.00049).
+- A2 vs A1: A2 better on 2/7 paired units (5 exact ties: both arms chose the same twin); one-sided Wilcoxon p = 0.250 (smallest attainable with 2 untied pairs: 0.25).
 - Holm over 2 comparisons at α = 0.05: **H1 not supported**.
 
 
@@ -100,7 +100,7 @@ _Filled by `bench/run_all.py` on 2026-11-01 16:36 from `bench/results.json`._
 | Uniform vs posterior-guided falsification | Sampling | failures / 100 rollouts | | | |
 
 ### Verifier seeded-bad self-test (H3)
-_Filled by `bench/run_all.py` on 2026-11-01 16:36._
+_Filled by `bench/run_all.py` on 2026-11-01 21:38._
 
 | Mutation class | n injected | Caught | First catching gate | False rejects on known-good (n) |
 |---|---|---|---|---|

@@ -114,6 +114,8 @@ def _grid(half: float, per_axis: int, n: int = 2) -> np.ndarray:
 def certify_roa(step: StepFn, P: np.ndarray, c0_noise: float, c_hi: float, lip_fn: LipFn) -> RoaResult:
     """Inner level c0 >= c0_noise (grown past the friction dead band) and the largest c* <= c_hi such that
     every shell [c_i, 2 c_i] between them passes shell_check. c_star = 0.0 means no certificate."""
+    if not c0_noise > 0 or INNER_RATIO * c0_noise > c_hi:  # also stops a 0 or NaN c0 looping forever
+        return RoaResult(0.0, c0_noise, np.nan, *lip_fn(c_hi), 0, f"inner level {c0_noise:.3g} leaves no shell below c_hi {c_hi:.3g}")
     c0, pts_total = c0_noise, 0
     while True:
         ok, max_dv, pts, why = shell_check(step, P, c0, INNER_RATIO * c0, lip_fn)

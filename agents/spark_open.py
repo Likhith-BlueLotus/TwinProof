@@ -62,7 +62,7 @@ SYSTEM = (
     "and the deterministic verifier decides. Before each tool call, give the operator one line of commentary. "
     "Start by fitting candidate structures. Then synthesize a controller that holds the pendulum upright and submit it. "
     "On a gate failure, read the witness numbers and propose the smallest change that could pass. Edit only "
-    "whitelisted MJCF fields: joint pos, damping, frictionloss, armature, friction, solref, solimp, kp, gear, mass. "
+    "whitelisted MJCF fields: joint pos, damping, frictionloss, armature, friction, solref, solimp, mass, diaginertia. "
     "Never edit goals, options, or limits. Controllers are parametric only; never write code. "
     "Stop once a controller is admitted. After 6 consecutive rejections, ask the operator for a new experiment."
 )

@@ -345,7 +345,7 @@
    "a2_better": 2,
    "ties": 5,
    "p_one_sided": 0.25,
-   "min_attainable_p": 0.0078125
+   "min_attainable_p": 0.25
   }
  },
  "seconds": 1120.6635961532593

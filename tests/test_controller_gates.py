@@ -64,3 +64,23 @@ def test_certify_roa_refuses_when_inner_ball_can_escape():
     lip = lambda c: (2 * np.sqrt(c) * 10.0, 0.0)  # noqa: E731
     roa = certify_roa(contract, P, 1e-3, 4e-3, lip)
     assert roa.c_star == 0.0 and "jump" in roa.reason
+
+
+def test_certify_roa_never_returns_a_level_above_c_hi():
+    from verifier.lyapunov import certify_roa
+    contract = lambda X: 0.5 * X  # noqa: E731
+    lip = lambda c: (0.0, 0.0)  # noqa: E731
+    roa = certify_roa(contract, np.eye(2), 3e-3, 4e-3, lip)  # the first shell [c0, 2 c0] already passes c_hi
+    assert roa.c_star == 0.0
+
+
+def test_g0_refuses_infinite_parameters():
+    from verifier.gates import g0_admissible
+    assert not g0_admissible(S1, {".//joint[@name='hinge']@damping": "inf"}).passed
+
+
+def test_g5_counts_a_diverged_rollout_as_a_failure():
+    from verifier.verify import rollout_failures
+    X, U = np.zeros((2, 5, 2)), np.zeros((2, 5, 1))
+    X[1, 3, 0] = np.nan  # comparisons with NaN are False, so a NaN row used to count as a success
+    assert rollout_failures(X, U, np.eye(2), c_star=1.0, u_limit=1.0, q_eq=0.0, goal=0.0, tol=0.1).tolist() == [False, True]

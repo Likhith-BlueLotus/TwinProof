@@ -30,6 +30,9 @@ class GateResult(NamedTuple):
 def g0_admissible(base_xml: str, patch: dict[str, str]) -> GateResult:
     """Parses, whitelisted fields only, physical masses/inertias/dissipation, solref >= 2 timesteps."""
     try:
+        # MuJoCo reads "inf" as 0, so a non-finite value would build a different model than the one claimed
+        if not all(np.isfinite(float(t)) for v in patch.values() for t in str(v).split()):
+            raise ValueError("patch values must be finite numbers")
         m = mujoco.MjModel.from_xml_string(apply_patch(base_xml, patch))
     except (PatchRejected, ValueError) as err:
         return GateResult(False, {}, f"G0: {err}")

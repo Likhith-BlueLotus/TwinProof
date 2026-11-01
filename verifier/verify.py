@@ -17,7 +17,7 @@ from physics.mjcf_patch import apply_patch
 from physics.monitor import contact_metrics
 from physics.ekf import innovations as ekf_innovations, tune_accel_psd
 from physics.rollout import rollout
-from verifier.g7_scan import scan_source
+from verifier.g7_scan import scan_claim
 from verifier.gates import GateResult, g0_admissible, g1_heldout, g4_contacts, g5_robustness, g7_patch_guard
 from verifier.pipeline import verify_s1_lqr
 
@@ -115,14 +115,21 @@ def verify(claim: Claim, ev: Evidence, seed: int) -> Verdict:
     if not run("G4", g4_contacts(metrics, F_MAX)):
         return Verdict(claim, gates)
     u_limit = float(nominal.actuator_ctrlrange[0, 1])
-    V = np.einsum("ntj,jk,ntk->nt", X, ctrl.P, X)
-    failed = (np.abs(U).max(axis=(1, 2)) > u_limit) | (V.max(1) > ctrl.roa.c_star) | (np.abs(X[:, -1, 0] + claim.controller.q_eq - ev.goal) > ev.success_tol)
+    failed = rollout_failures(X, U, ctrl.P, ctrl.roa.c_star, u_limit, claim.controller.q_eq, ev.goal, ev.success_tol)
     run("G5", g5_robustness(int(failed.sum()), len(failed)))
     return Verdict(claim, gates)
 
 
+def rollout_failures(X: np.ndarray, U: np.ndarray, P: np.ndarray, c_star: float, u_limit: float,
+                     q_eq: float, goal: float, tol: float) -> np.ndarray:
+    """Per rollout: saturated, left the certified set, missed the goal, or diverged (NaN/inf counts as failed)."""
+    V = np.einsum("ntj,jk,ntk->nt", X, P, X)
+    diverged = ~np.isfinite(X).all(axis=(1, 2)) | ~np.isfinite(U).all(axis=(1, 2))
+    return diverged | (np.abs(U).max(axis=(1, 2)) > u_limit) | (V.max(1) > c_star) | (np.abs(X[:, -1, 0] + q_eq - goal) > tol)
+
+
 def _g7(claim: Claim, ev: Evidence, target: float | None) -> GateResult:
-    violations = [v for path, src in claim.code.items() for v in scan_source(src, path)]
+    violations = scan_claim(claim.code)
     if violations:
         return GateResult(False, {"violations": float(len(violations))}, "G7: code refused: " + "; ".join(violations))
     return g7_patch_guard(ev.base_xml, claim.patch, target, ev.goal)

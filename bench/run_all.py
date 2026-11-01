@@ -208,9 +208,11 @@ def h1(results: dict) -> dict:
     out = {}
     for other, p in pairs.items():
         diff = np.array([b - a for a, b in p])  # positive: A2 better
-        out[other] = {"pairs": len(p), "a2_better": int((diff > 0).sum()), "ties": int((diff == 0).sum()),
-                      "p_one_sided": float(wilcoxon(diff, alternative="greater").pvalue) if len(p) else None,
-                      "min_attainable_p": 0.5 ** len(p)}
+        ties = int((diff == 0).sum())
+        n_eff = len(p) - ties  # Wilcoxon drops exact ties, so only these pairs can move p
+        out[other] = {"pairs": len(p), "a2_better": int((diff > 0).sum()), "ties": ties,
+                      "p_one_sided": float(wilcoxon(diff, alternative="greater").pvalue) if n_eff else None,
+                      "min_attainable_p": 0.5 ** n_eff if n_eff else None}
     return out
 
 
@@ -251,7 +253,8 @@ def markdown(results: dict) -> tuple[str, str, str]:
     h = results["h1"]
     h1_text = "\n".join(f"- A2 vs {o}: A2 better on {v['a2_better']}/{v['pairs']} paired units"
                         + (f" ({v['ties']} exact ties: both arms chose the same twin)" if v.get("ties") else "")
-                        + f"; one-sided Wilcoxon p = {v['p_one_sided']:.3f} (smallest attainable with {v['pairs']} pairs: {v['min_attainable_p']:.2g})."
+                        + (f"; one-sided Wilcoxon p = {v['p_one_sided']:.3f} (smallest attainable with {v['pairs'] - v.get('ties', 0)} untied pairs: {v['min_attainable_p']:.2g})."
+                           if v["p_one_sided"] is not None else "; no untied pairs, so no test.")
                         for o, v in h.items())
     holm = sorted((v["p_one_sided"], o) for o, v in h.items() if v["p_one_sided"] is not None)
     rejected = []

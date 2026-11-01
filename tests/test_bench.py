@@ -44,3 +44,10 @@ def test_h1_counts_ties_and_skips_missing_arms():
     out = h1(results)
     assert out["A0"]["pairs"] == 4 and out["A0"]["a2_better"] == 3
     assert out["A1"]["pairs"] == 2 and out["A1"]["ties"] == 1 and out["A1"]["a2_better"] == 1
+    assert out["A1"]["min_attainable_p"] == 0.5  # Wilcoxon drops the tie: one informative pair, not two
+
+
+def test_h1_survives_all_ties_and_empty_arms():
+    arm = lambda v: {"heldout_nrmse": {"u1": v}}  # noqa: E731
+    out = h1({"scenarios": {"s1": {"arms": {"A0": arm(0.02), "A2": arm(0.02)}}}})
+    assert out["A0"]["p_one_sided"] is None and out["A1"]["pairs"] == 0

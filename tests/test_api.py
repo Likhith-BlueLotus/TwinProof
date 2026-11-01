@@ -101,3 +101,27 @@ def test_runs_whose_video_was_replaced_say_so():
         pytest.skip("no finger-held-pin run recorded")
     assert client.get(f"/api/runs/{finger}").json()["video"]["available"] is False
     assert client.get(f"/api/runs/{finger}/video").status_code == 404
+
+
+def test_run_list_survives_a_half_written_live_log(tmp_path, monkeypatch):
+    monkeypatch.setattr("api.main.RUNS", tmp_path)
+    (tmp_path / "agent_s1_s1_20990101T000000.jsonl").write_text(
+        json.dumps({"t": 1.0, "kind": "provider", "data": {"slug": "m", "provider": "p"}}) + '\n{"t": 2.0, "kind": "ver')
+    runs = client.get("/api/runs")
+    assert runs.status_code == 200 and runs.json()[0]["provider"]["slug"] == "m"
+
+
+@pytest.mark.parametrize("path", ["/api/runs/live", f"/api/runs/{RUN or 'agent_x_20990101T000000'}/whatif"])
+def test_other_websites_cannot_start_paid_or_heavy_work(path):
+    # a page on another origin can POST to localhost without a CORS preflight; it must be refused before any work
+    r = client.post(path, json={"torque_limit": 0.5}, headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403
+
+
+def test_one_heavy_job_at_a_time(monkeypatch):
+    from api import main
+    assert main.HEAVY.acquire(blocking=False)
+    try:
+        assert client.post("/api/runs/live", headers={"Origin": "http://localhost:5173"}).status_code == 429
+    finally:
+        main.HEAVY.release()
