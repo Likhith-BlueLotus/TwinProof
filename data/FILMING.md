@@ -55,10 +55,18 @@ Only footage you film yourself goes in the video.
 - **Fix the pin.** A pin held between fingers adds friction that changes from take to take; clamp the bolt.
 - **Swing at least 20°.** A 13° take could not separate the pivot or the friction.
 
+## Lessons from the second takes (2026-11-01)
+- **The marker fix worked:** it was decoded cleanly on every S1 take.
+- **The pin is still held by fingers, and it shows.** The swing period drops from 0.93 s to about 0.80 s below a 3° amplitude. A rigid pin can't do that; a compliant one can. G1 refuses every S1 twin, and held-out error is 6–9% (the 31 Oct rig gave 0.8–1.9%). Clamp the bolt.
+- **Check the ramp angle against the motion.** At the stated 13°, the can would reach about 1 m/s and leave a 69.5 cm board in under 1.5 s. It actually took about 3.5 s to roll 30 cm, at 0.02–0.09 m/s² and speeding up along the board. That is under 1° effective, on a board that sags or curves. Measure the angle with a phone level app on the board itself, and use a stiff board raised on one end.
+- **Clamped re-film (same day):** with no fingers on the pin, all three pivots agree to within 5 mm and the held-out error falls to 3.1% / 3.4%. The period still shortens below a 3° swing, so G1 still refuses. Next, a ball-bearing pivot (a skateboard or fidget-spinner bearing pressed onto the bolt) instead of a ruler hole on a thin nail. See `logs/runs/nov01_clamped/README.md`.
+- **S2 re-film on a tilted board:** measured against the wall-tile line (a true horizontal), the slope is **8.0°**, not 13°. β = 0.74 ± 2.2% replicates the 31 Oct rig's 0.78 ± 4.5%. Keep the marker **off the can's path**: crossing it shrinks the can's mask and ends the clean window at 21 cm. See `logs/runs/nov01_s2/README.md`.
+- Results: `logs/runs/nov01/README.md`. The primary results stay on the 31 Oct rig (videos in `*_oct31/`).
+
 ## Where files go
 ```
 data/videos/static/s1.mp4  s2.mp4  s3.mp4
-data/videos/s1_pendulum/take1.mp4  take2.mp4  take3.mp4
+data/videos/s1_pendulum/take1.mp4  take2.mp4  take3.mp4      (latest rig; older rigs live in s1_pendulum_<date>/)
 data/videos/s2_incline/take1.mp4   take2.mp4  take3.mp4
 data/videos/s3_hinge/take1.mp4     take2.mp4  take3.mp4
 data/videos/broll/<anything>.mp4

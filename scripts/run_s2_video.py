@@ -52,6 +52,7 @@ def main() -> None:
     ap.add_argument("--side", type=float, required=True, help="measured marker side, metres")
     ap.add_argument("--radius", type=float, required=True, help="measured can radius, metres")
     ap.add_argument("--noun", action="append", required=True)
+    ap.add_argument("--box", type=int, nargs=4, help="frame-0 pixel box x0 y0 x1 y1 for the can; skips noun detection")
     args = ap.parse_args()
 
     t = frame_times(args.video)
@@ -59,12 +60,15 @@ def main() -> None:
     h, w = f0.shape[:2]
     H, marker_frames = homography_video(args.video, args.side)
     api = client()
-    found = detect_frame0(api, f0, args.noun)
-    noun, boxes = next(((n, b) for n, b in found.items() if b), (None, {}))
-    if not boxes:
-        raise SystemExit(f"SAM found none of {args.noun} on frame 0: {found}")
-    # the can is the most compact detection (a disc), not the ramp
-    box = min(boxes.values(), key=lambda b: abs(np.log((b[2] - b[0]) / (b[3] - b[1]))))
+    if args.box:  # operator box when no concept matches frame 0 (e.g. a release stick over the can)
+        noun, box = "operator box", tuple(args.box)
+    else:
+        found = detect_frame0(api, f0, args.noun)
+        noun, boxes = next(((n, b) for n, b in found.items() if b), (None, {}))
+        if not boxes:
+            raise SystemExit(f"SAM found none of {args.noun} on frame 0: {found}; pass --box x0 y0 x1 y1")
+        # the can is the most compact detection (a disc), not the ramp
+        box = min(boxes.values(), key=lambda b: abs(np.log((b[2] - b[0]) / (b[3] - b[1]))))
     masks = full_frame_masks(track(api, args.video, box_prompt({OBJECT_ID: box}, w, h)), w, h)
     tr = tracks(masks, t, H, plane_grid(H, w, h), [OBJECT_ID])[OBJECT_ID]
 

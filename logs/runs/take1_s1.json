@@ -1,5 +1,5 @@
 {
- "video": "data/videos/s1_pendulum/take1.mp4",
+ "video": "data/videos/s1_pendulum_oct31/take1.mp4",
  "noun": "steel ruler",
  "box": [
   426,
@@ -54,7 +54,7 @@
  "bar_length_m": 0.33,
  "bar_length_video_m": 0.3186341491962386,
  "registration": {
-  "from": "data/videos/s1_pendulum/take3.mp4",
+  "from": "data/videos/s1_pendulum_oct31/take3.mp4",
   "shift_px": [
    -0.6241300106048584,
    1.2633328437805176

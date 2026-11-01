@@ -1,0 +1,51 @@
+{
+ "identification_take": 1,
+ "structure": "incline_rolling",
+ "relative_slip": 0.07465700978237644,
+ "identifiable": true,
+ "reason": "identifiable",
+ "beta": 1.499994401486787,
+ "beta_rel_std": 0.0047036163426920725,
+ "mu": null,
+ "gates": {
+  "G7": {
+   "pass": true,
+   "feedback": ""
+  },
+  "G0": {
+   "pass": true,
+   "min_body_mass": 0.0685,
+   "triangle_slack": 0.000108529282,
+   "min_damping": 0.0,
+   "min_frictionloss": 0.0,
+   "min_armature": 0.0,
+   "max_mu": 1.000001,
+   "min_solref_over_timestep": 20.0,
+   "feedback": ""
+  },
+  "G1": {
+   "pass": false,
+   "nrmse": 2.4873713221036073,
+   "ljung_box_p": 1.8068743980917368e-48,
+   "feedback": "G1: held-out NRMSE 2.487 > 0.1; the structure does not predict unseen motion"
+  }
+ },
+ "heldout": {
+  "take2": {
+   "nrmse_s": 0.7928027755731581,
+   "max_abs_s_mm": 699.9368602392449,
+   "slip": [
+    "incline_rolling",
+    0.04969673554042675
+   ]
+  },
+  "take3": {
+   "nrmse_s": 0.7710695556249813,
+   "max_abs_s_mm": 537.6675943696805,
+   "slip": [
+    "incline_sliding",
+    0.13495945839562684
+   ]
+  }
+ }
+}

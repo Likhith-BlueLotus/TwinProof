@@ -1,9 +1,11 @@
-"""S2 identification on real takes (protocol: take 1 identifies; takes 2-3 are held out).
+"""S2 identification on real takes (protocol: one take identifies, default take 1; the others are held out).
 
-Run: uv run python -m scripts.run_s2_identify   ->  logs/runs/s2_identify.json
+Run: uv run python -m scripts.run_s2_identify [--ident K]   ->  logs/runs/s2_identify.json
+The identification take is the one with the longest clean straight run; the others are held out.
 """
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -31,8 +33,11 @@ def nrmse(res: np.ndarray, obs: np.ndarray) -> float:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ident", type=int, default=1, choices=(1, 2, 3), help="identification take")
+    ident = ap.parse_args().ident
     base = MODEL.read_text()
-    t, s, psi = take(1)
+    t, s, psi = take(ident)
     structure, slip = classify_contact(t, s, psi, RADIUS)
     lower, upper = bounds(structure)
     x0 = np.clip(X0, lower, upper)
@@ -43,15 +48,15 @@ def main() -> None:
     post = laplace(obj, x, step=0.02)
     ok, why = identifiability(post, NAMES, FREE_PHYSICAL[structure])
     gates = verify_s2_structure(base, x, t, s, psi, n, rel0, SIGMA_S**2)
-    out = {"identification_take": 1, "structure": structure, "relative_slip": slip, "identifiable": ok, "reason": why,
+    out = {"identification_take": ident, "structure": structure, "relative_slip": slip, "identifiable": ok, "reason": why,
            "beta": float(np.exp(x[7])), "beta_rel_std": float(np.sqrt(post.cov[7, 7])),
            "mu": float(np.exp(x[0])) if structure == "incline_sliding" else None,
            "gates": {g: {"pass": r.passed, **r.witness, "feedback": r.feedback_to_agent} for g, r in gates.items()},
            "heldout": {}}
 
-    for k in (2, 3):
+    for k in (k for k in (1, 2, 3) if k != ident):
         tk, sk, psik = take(k)
-        lo, hi = x.copy() - 1e-6, x.copy() + 1e-6  # physics and noise model frozen from take 1
+        lo, hi = x.copy() - 1e-6, x.copy() + 1e-6  # physics and noise model frozen from the identification take
         lo[NUISANCE], hi[NUISANCE] = lower[NUISANCE], upper[NUISANCE]
         relk = release_time(tk, sk)
         objk = make_objective(base, tk, sk, psik, relk, SIGMA_S**2, SIGMA_PSI**2, x)

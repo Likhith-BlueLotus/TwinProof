@@ -1,5 +1,5 @@
 {
- "video": "data/videos/s1_pendulum/take2.mp4",
+ "video": "data/videos/s1_pendulum_oct31/take2.mp4",
  "noun": "ruler",
  "box": [
   426,
@@ -54,7 +54,7 @@
  "bar_length_m": 0.33,
  "bar_length_video_m": 0.3176166329295217,
  "registration": {
-  "from": "data/videos/s1_pendulum/take3.mp4",
+  "from": "data/videos/s1_pendulum_oct31/take3.mp4",
   "shift_px": [
    -0.5034008026123047,
    2.820122241973877

@@ -1,0 +1,62 @@
+{
+ "video": "not kept (replaced by the clamped re-film, take3)",
+ "noun": "ruler",
+ "box": [
+  420,
+  37,
+  564,
+  237
+ ],
+ "H": [
+  [
+   0.0013041349259110468,
+   -2.4310850835230154e-05,
+   -0.3529411444156318
+  ],
+  [
+   1.760926319750443e-05,
+   0.0012735049096309241,
+   -0.10713278578469974
+  ],
+  [
+   0.0001785099213240014,
+   -5.544657171848805e-05,
+   1.0
+  ]
+ ],
+ "marker_frames": 73,
+ "down": [
+  0.04026358364545001,
+  0.9991890931310378
+ ],
+ "down_estimated": true,
+ "size": [
+  848,
+  478
+ ],
+ "start_s": 1.25,
+ "t0_video": 1.252478,
+ "frames": 946,
+ "frames_with_mask": 946,
+ "pivot_m": [
+  0.18268622097859763,
+  -0.039109556794283094
+ ],
+ "pivot_valid": true,
+ "pivot_radius_m": 0.14432557578766664,
+ "pivot_rms_rel": 0.01823585936090779,
+ "pivot_sd_m": 9.697799723390384e-05,
+ "kasa_center_m": [
+  0.18411586492417445,
+  -0.00736840534187846
+ ],
+ "kasa_radius_m": 0.11315237773959562,
+ "bar_length_m": 0.33,
+ "bar_length_video_m": 0.3063296517381811,
+ "registration": null,
+ "rig_from": null,
+ "model": "logs/runs/take3_model.xml",
+ "mass_kg": 0.2,
+ "mass_assumed": false,
+ "sigma_phi_rad": 0.0008275373809501841
+}

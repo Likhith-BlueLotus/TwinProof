@@ -1,0 +1,62 @@
+{
+ "video": "not kept (replaced by the clamped re-film, take1)",
+ "noun": "steel ruler",
+ "box": [
+  419,
+  38,
+  524,
+  229
+ ],
+ "H": [
+  [
+   0.0012900525911412484,
+   -2.239567290677115e-05,
+   -0.34716923299648167
+  ],
+  [
+   1.1275886047387253e-05,
+   0.0012611731618414827,
+   -0.10795920928234451
+  ],
+  [
+   0.00017343115148724548,
+   -0.00011549467793119895,
+   1.0
+  ]
+ ],
+ "marker_frames": 173,
+ "down": [
+  0.04026358364545002,
+  0.9991890931310379
+ ],
+ "down_estimated": true,
+ "size": [
+  848,
+  478
+ ],
+ "start_s": 1.0,
+ "t0_video": 1.001867,
+ "frames": 974,
+ "frames_with_mask": 974,
+ "pivot_m": [
+  0.18268622097859763,
+  -0.039109556794283094
+ ],
+ "pivot_valid": false,
+ "pivot_radius_m": 0.1415157536012589,
+ "pivot_rms_rel": 0.03569569325137693,
+ "pivot_sd_m": 0.00029246291892251274,
+ "kasa_center_m": [
+  0.18898825174836778,
+  0.0637277530086543
+ ],
+ "kasa_radius_m": 0.04379662834559075,
+ "bar_length_m": 0.33,
+ "bar_length_video_m": 0.3068412693239603,
+ "registration": null,
+ "rig_from": "/private/tmp/claude-501/-Users-varunm-Likhith-s-Professional-TwinProof/9bae5d49-55a5-4fe9-8be1-3978bbf5ba84/scratchpad/new/rig3.json",
+ "model": "logs/runs/take1_model.xml",
+ "mass_kg": 0.2,
+ "mass_assumed": false,
+ "sigma_phi_rad": 0.0007240490201825509
+}

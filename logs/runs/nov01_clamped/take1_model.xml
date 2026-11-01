@@ -1,0 +1,13 @@
+<!-- S1: rigid bar on a pivot bolt. Geometry is set from tape-measured values; damping/frictionloss/armature are identified. -->
+<mujoco model="s1_pendulum">
+  <option timestep="0.002" integrator="implicitfast"/>
+  <worldbody>
+    <body name="bar" pos="0 0 0">
+      <joint name="hinge" type="hinge" axis="0 1 0" damping="0.002" frictionloss="0.0005" armature="0"/>
+      <geom name="rod" type="capsule" fromto="0 0 0.01823 0 0 -0.31177" size="0.008" mass="0.2"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="tau" joint="hinge" gear="1" ctrllimited="true" ctrlrange="-0.57593 0.57593"/>
+  </actuator>
+</mujoco>
