@@ -92,7 +92,7 @@ Console (recorded runs work offline; live runs need keys):
 
 ```bash
 uv run --env-file .env uvicorn api.main:app --port 8000
-npm --prefix web install && npm --prefix web run dev     # http://localhost:5173
+npm --prefix web install && npm --prefix web run dev     # landing page http://localhost:5173, console /console.html
 ```
 
 Pipeline on your own take (see [data/FILMING.md](data/FILMING.md); print [the marker](data/aruco/aruco_4x4_id0_80mm.pdf) at 100% and measure it):

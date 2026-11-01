@@ -14,6 +14,8 @@ const RIGS = { s1_s1: 'S1 synthetic', take3_s1: 'S1 real · 31 Oct', 'nov01/take
 const rigName = (r) => RIGS[r.track] || r.track || r.id
 const runLabel = (r) => `${rigName(r)} · ${r.admitted}/${r.claims} admitted · ${r.id.slice(-15, -7)}`
 
+const params = new URLSearchParams(location.search) // the landing page links to ?run=<id> and ?view=bench
+
 export default function App() {
   const [runs, setRuns] = useState([])
   const [runId, setRunId] = useState(null)
@@ -21,7 +23,7 @@ export default function App() {
   const [cursor, setCursor] = useState(Infinity) // rows shown; Infinity = whole run
   const [whatIfRecord, setWhatIfRecord] = useState(null)
   const [error, setError] = useState(null)
-  const [view, setView] = useState('runs')
+  const [view, setView] = useState(params.get('view') === 'bench' ? 'bench' : 'runs')
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'dark')
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -36,7 +38,8 @@ export default function App() {
   useEffect(() => {
     listRuns().then((rs) => {
       setRuns(rs)
-      setRunId((rs.find((r) => r.admitted) || rs[0])?.id ?? null)
+      const asked = rs.find((r) => r.id === params.get('run'))
+      setRunId((asked || rs.find((r) => r.admitted) || rs[0])?.id ?? null)
     }).catch((e) => setError(e.message))
   }, [])
 
@@ -66,7 +69,7 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div>
-          <div className="wordmark">Twin<span>Proof</span></div>
+          <a className="wordmark" href="/">Twin<span>Proof</span></a>
           <div className="tagline">Film it. Twin it. Prove it.</div>
         </div>
         <div className="spacer" />

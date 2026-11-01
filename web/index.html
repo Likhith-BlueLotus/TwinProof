@@ -3,18 +3,260 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TwinProof</title>
+    <title>TwinProof — Film it. Twin it. Prove it.</title>
+    <meta name="description" content="Film a mechanism for ten seconds. TwinProof turns the video into a MuJoCo twin that knows how wrong it is, and a verifier certifies or refuses every claim." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-    <script>
-      // pin the theme before first paint: saved choice, else the system setting
-      try { document.documentElement.dataset.theme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') }
-      catch { document.documentElement.dataset.theme = 'dark' }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="preload" as="image" href="/stills/s1-oct31.webp" fetchpriority="high" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <!-- the mark: a pendulum and its dashed twin -->
+      <symbol id="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="12" cy="3.5" r="1.5" /><path d="M12 5v10" /><circle cx="12" cy="18.5" r="3" />
+        <path d="M13 5.2l4.6 9.2" stroke-dasharray="1.6 2.2" />
+      </symbol>
+      <symbol id="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </symbol>
+      <symbol id="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </symbol>
+    </svg>
+
+    <div class="loader" id="loader" aria-hidden="true">
+      <div class="loader-mark" id="loader-mark"><svg class="mark-lg"><use href="#mark" /></svg><span>TwinProof</span></div>
+      <div class="loader-track"><div class="loader-fill" id="loader-fill"></div></div>
+    </div>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-plate" aria-hidden="true">
+          <div class="hero-plate-inner" data-parallax='{"y":[0,12]}'>
+            <img src="/stills/s1-oct31.webp" alt="" fetchpriority="high" />
+          </div>
+          <div class="hero-tint"></div>
+        </div>
+
+        <header class="site-header">
+          <nav class="header-nav" aria-label="Sections">
+            <a href="#pipeline">How it works</a>
+            <a href="#rigs">Real rigs</a>
+          </nav>
+          <a class="brand" href="/" aria-label="TwinProof home"><svg class="mark"><use href="#mark" /></svg>TwinProof</a>
+          <div class="header-right">
+            <a class="text-button" href="/console.html">Open console</a>
+            <button class="burger" id="menu-open" aria-label="Open menu" aria-haspopup="dialog" aria-controls="menu"><span></span><span></span></button>
+          </div>
+        </header>
+
+        <h1 id="hero-title" class="hero-title words" data-gate data-reveal='{"stagger":140,"duration":1100}'>Prove The Twin</h1>
+
+        <div class="hero-bottom">
+          <p class="hero-tagline lines" data-gate data-reveal='{"delay":350,"stagger":110,"duration":900}'>
+            <span>Film It,</span><span>Twin It</span>
+          </p>
+          <div class="hero-cards">
+            <div class="rig-slider" data-gate data-inview='{"from":{"opacity":0,"y":28},"delay":650,"cfg":[200,26]}'>
+              <div class="rig-stack" id="rig-stack"></div>
+              <div class="dots light" id="rig-dots" aria-label="Featured rig"></div>
+            </div>
+            <article class="glass stat-card" data-gate data-inview='{"from":{"opacity":0,"y":28},"delay":780,"cfg":[200,26]}'>
+              <div class="stat-card-text">
+                <strong>5</strong>
+                <span class="swatches" aria-hidden="true"><i style="background:#5790e6"></i><i style="background:#c2e029"></i><i style="background:#0b6e97"></i><i style="background:#ffffff"></i></span>
+                <small>Real rigs on video</small>
+              </div>
+              <img src="/stills/s1-clamped.webp" alt="Clamped-pin pendulum with its twin drawn on" loading="lazy" />
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="verdicts" id="verdicts" aria-labelledby="verdicts-title">
+        <div class="verdicts-top">
+          <div class="percent" data-inview='{"from":{"opacity":0,"scale":0.9},"cfg":[220,22]}'>
+            <strong>100%</strong><small>Seeded bugs caught by the self-test</small>
+          </div>
+          <article class="badge-card" data-inview='{"from":{"opacity":0,"y":24},"delay":120,"cfg":[200,26]}'>
+            <span class="index-chip">G1</span>
+            <div>
+              <p class="badge-title">A verifier that can say no</p>
+              <p>Every claim the agent makes faces seven gates. On real footage the twins predict well, and G1 still refuses: the leftover error has structure, so nothing gets certified.</p>
+            </div>
+          </article>
+        </div>
+
+        <h2 id="verdicts-title" class="ghost" aria-live="polite">
+          <span class="ghost-row">
+            <span class="ghost-word" data-parallax='{"x":[-3,3]}'><span class="ghost-clip"><span></span></span></span>
+            <span class="ghost-word" data-parallax='{"x":[3,-3]}'><span class="ghost-clip"><span></span></span></span>
+          </span>
+          <span class="ghost-row">
+            <span class="ghost-word ink" data-parallax='{"x":[-2,4]}'><span class="ghost-clip"><span></span></span></span>
+            <span class="ghost-word" data-parallax='{"x":[4,-3]}'><span class="ghost-clip"><span></span></span></span>
+          </span>
+        </h2>
+
+        <figure class="rig-photo" data-inview='{"from":{"opacity":0,"y":60,"scale":0.92},"cfg":[170,26]}'>
+          <div class="rig-photo-stack" id="rig-photo-stack"></div>
+          <figcaption class="glass-caption"><strong id="rig-photo-name"></strong><small id="rig-photo-role"></small></figcaption>
+        </figure>
+
+        <div class="carousel-controls">
+          <button class="arrow-button outline" id="verdict-prev" aria-label="Previous rig" data-hover-root><svg class="flip" data-hover='{"to":{"scale":1.15},"cfg":[320,18]}'><use href="#arrow" /></svg></button>
+          <div class="dots" id="verdict-dots" aria-label="Rig"></div>
+          <button class="arrow-button solid" id="verdict-next" aria-label="Next rig" data-hover-root><svg data-hover='{"to":{"scale":1.15},"cfg":[320,18]}'><use href="#arrow" /></svg></button>
+        </div>
+      </section>
+
+      <section class="pipeline" id="pipeline" aria-labelledby="pipeline-title">
+        <span class="eyebrow">How it works</span>
+        <h2 id="pipeline-title" class="lines display" data-reveal><span>Four steps,</span><span>one verdict</span></h2>
+        <ul class="steps">
+          <li data-inview='{"from":{"opacity":0,"y":26},"delay":0,"cfg":[190,26]}'>
+            <a href="#rigs" data-hover-root><span class="step-index">01</span><span class="step-text"><strong>Film it</strong><small>Ten seconds of phone video with a printed ArUco marker in frame. No lab, no sensors.</small></span><span class="step-arrow"><svg data-hover='{"from":{"x":0,"opacity":0.55},"to":{"x":8,"opacity":1},"cfg":[300,20]}'><use href="#arrow" /></svg></span></a>
+          </li>
+          <li data-inview='{"from":{"opacity":0,"y":26},"delay":90,"cfg":[190,26]}'>
+            <a href="#rigs" data-hover-root><span class="step-index">02</span><span class="step-text"><strong>Track it</strong><small>SAM 3.1 follows the object every frame; the marker turns pixels into metres.</small></span><span class="step-arrow"><svg data-hover='{"from":{"x":0,"opacity":0.55},"to":{"x":8,"opacity":1},"cfg":[300,20]}'><use href="#arrow" /></svg></span></a>
+          </li>
+          <li data-inview='{"from":{"opacity":0,"y":26},"delay":180,"cfg":[190,26]}'>
+            <a href="#numbers" data-hover-root><span class="step-index">03</span><span class="step-text"><strong>Twin it</strong><small>A MuJoCo twin fitted by CMA-ES, with a posterior that says how sure it is.</small></span><span class="step-arrow"><svg data-hover='{"from":{"x":0,"opacity":0.55},"to":{"x":8,"opacity":1},"cfg":[300,20]}'><use href="#arrow" /></svg></span></a>
+          </li>
+          <li data-inview='{"from":{"opacity":0,"y":26},"delay":270,"cfg":[190,26]}'>
+            <a href="#log" data-hover-root><span class="step-index">04</span><span class="step-text"><strong>Prove it</strong><small>Gates G7 to G5 admit or refuse every claim, naming the number that decided.</small></span><span class="step-arrow"><svg data-hover='{"from":{"x":0,"opacity":0.55},"to":{"x":8,"opacity":1},"cfg":[300,20]}'><use href="#arrow" /></svg></span></a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="rigs" id="rigs" aria-labelledby="rigs-title">
+        <div class="rigs-grid">
+          <div class="rigs-intro">
+            <img class="rigs-icon" src="/stills/s2-ramp.webp" alt="Can rolling down a 12° ramp with its twin drawn on" loading="lazy"
+              data-inview='{"from":{"opacity":0,"scale":0.85},"cfg":[240,20]}' />
+            <h2 id="rigs-title" class="lines display" data-reveal='{"stagger":120}'><span>Filmed on</span><span>a phone,</span><span>not a lab</span></h2>
+            <p class="fade-words" data-reveal='{"delay":250,"stagger":28,"duration":700}'>Five real rigs, three pendulums and two ramps, each a short take with a printed marker. The pipeline measured them, and caught a wrong ramp angle on its own.</p>
+          </div>
+          <div class="rig-cards">
+            <figure class="rig-card clay" data-inview='{"from":{"opacity":0,"y":48},"delay":0,"cfg":[180,26]}' data-hover-root>
+              <div class="rig-card-img" data-hover='{"to":{"scale":1.03},"cfg":[300,22]}'><img src="/stills/s1-clamped.webp" alt="Clamped-pin pendulum mid-swing with its twin drawn on" loading="lazy" /></div>
+              <figcaption class="glass-caption"><strong>Clamped pin</strong><small>Three pivot fits agree within 5 mm; held-out takes at 3.1% and 3.4%.</small></figcaption>
+            </figure>
+            <figure class="rig-card blue" data-inview='{"from":{"opacity":0,"y":48},"delay":140,"cfg":[180,26]}' data-hover-root>
+              <div class="rig-card-img" data-hover='{"to":{"scale":1.03},"cfg":[300,22]}'><img src="/stills/s2-board.webp" alt="Can rolling down a wooden board with its twin drawn on" loading="lazy" /></div>
+              <figcaption class="glass-caption"><strong>8° board</strong><small>Stated as 13°. The motion says 8.0°, and the twin built at 13° is refused.</small></figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="numbers" id="numbers" aria-labelledby="numbers-title">
+        <span class="eyebrow light">By the numbers</span>
+        <h2 id="numbers-title" class="lines display" data-reveal><span>A verifier that</span><span>keeps score</span></h2>
+        <dl class="stat-grid">
+          <div data-inview='{"from":{"opacity":0,"y":30},"delay":0,"cfg":[180,24]}'><dt class="sr-only">Real rigs filmed</dt><dd><strong>5</strong><span>Real rigs filmed</span></dd></div>
+          <div data-inview='{"from":{"opacity":0,"y":30},"delay":110,"cfg":[180,24]}'><dt class="sr-only">Best held-out error</dt><dd><strong>0.8%</strong><span>Best held-out error</span></dd></div>
+          <div data-inview='{"from":{"opacity":0,"y":30},"delay":220,"cfg":[180,24]}'><dt class="sr-only">Seeded bugs caught</dt><dd><strong>7/7</strong><span>Seeded bugs caught</span></dd></div>
+          <div data-inview='{"from":{"opacity":0,"y":30},"delay":330,"cfg":[180,24]}'><dt class="sr-only">Real controllers certified</dt><dd><strong>0</strong><span>Real controllers certified, yet</span></dd></div>
+        </dl>
+      </section>
+
+      <section class="log" id="log" aria-labelledby="log-title">
+        <span class="eyebrow">Straight from the log</span>
+        <h2 id="log-title" class="lines display" data-reveal><span>What the</span><span>verifier said</span></h2>
+        <ul class="quotes">
+          <li data-inview='{"from":{"opacity":0,"y":40},"delay":0,"cfg":[180,26]}'>
+            <figure class="quote-card" data-hover-root data-hover='{"to":{"y":-8},"cfg":[300,22]}'>
+              <div><span class="quote-mark" aria-hidden="true">“</span><blockquote>Innovations not white (Ljung–Box p = 7.11e-08); unmodelled dynamics remain.</blockquote></div>
+              <figcaption><strong>G1 · Refused</strong><span>S1 pendulum, 31 Oct</span></figcaption>
+            </figure>
+          </li>
+          <li data-inview='{"from":{"opacity":0,"y":40},"delay":120,"cfg":[180,26]}'>
+            <figure class="quote-card" data-hover-root data-hover='{"to":{"y":-8},"cfg":[300,22]}'>
+              <div><span class="quote-mark" aria-hidden="true">“</span><blockquote>Held-out NRMSE 0.236 &gt; 0.1; the structure does not predict unseen motion.</blockquote></div>
+              <figcaption><strong>G1 · Rejected</strong><span>S1 with a finger-held pin, 1 Nov</span></figcaption>
+            </figure>
+          </li>
+          <li data-inview='{"from":{"opacity":0,"y":40},"delay":240,"cfg":[180,26]}'>
+            <figure class="quote-card" data-hover-root data-hover='{"to":{"y":-8},"cfg":[300,22]}'>
+              <div><span class="quote-mark" aria-hidden="true">“</span><blockquote>All gates pass: certified c* = 15.4, torque 0.91 of 2.5 N·m, 0 of 300 rollouts failed.</blockquote></div>
+              <figcaption><strong>Admitted</strong><span>Synthetic pendulum, known physics</span></figcaption>
+            </figure>
+          </li>
+        </ul>
+      </section>
+
+      <footer class="site-footer" id="contact">
+        <div class="cta-band">
+          <div>
+            <span class="eyebrow light">Get started</span>
+            <p class="lines cta-title" data-reveal><span>Ready to</span><span>prove it?</span></p>
+          </div>
+          <div class="cta-buttons" data-inview='{"from":{"opacity":0,"y":20},"delay":150,"cfg":[200,24]}'>
+            <button class="pill outline-light" data-open-take data-hover-root>Film your own take<svg data-hover='{"to":{"x":5},"cfg":[320,20]}'><use href="#arrow" /></svg></button>
+            <a class="pill light" href="/console.html" data-hover-root>Open console<svg data-hover='{"to":{"x":5},"cfg":[320,20]}'><use href="#arrow" /></svg></a>
+          </div>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-brand">
+            <a class="brand" href="/"><svg class="mark"><use href="#mark" /></svg>TwinProof</a>
+            <p>Film a mechanism, get a MuJoCo twin that knows how wrong it is, and a verifier that certifies or refuses.</p>
+            <p class="muted">Certificates are model-relative engineering checks, not safety certifications.</p>
+          </div>
+          <nav aria-label="Pipeline"><h3>Pipeline</h3><ul><li><a href="#pipeline">Film it</a></li><li><a href="#pipeline">Track it</a></li><li><a href="#pipeline">Twin it</a></li><li><a href="#pipeline">Prove it</a></li></ul></nav>
+          <nav aria-label="Results"><h3>Results</h3><ul><li><a href="#rigs">Real rigs</a></li><li><a href="#verdicts">Verdicts</a></li><li><a href="#numbers">By the numbers</a></li><li><a href="/console.html?view=bench">Benchmark</a></li></ul></nav>
+          <nav aria-label="Project"><h3>Project</h3><ul><li><a href="/console.html">Console</a></li><li><a href="https://github.com/Likhith-BlueLotus/TwinProof#readme">README</a></li><li><a href="https://github.com/Likhith-BlueLotus/TwinProof/blob/main/BENCHMARK.md">BENCHMARK.md</a></li><li><a href="https://github.com/Likhith-BlueLotus/TwinProof/blob/main/HACKATHON.md">Build log</a></li></ul></nav>
+        </div>
+        <div class="footer-bar">
+          <span>© 2026 TwinProof.</span>
+          <span>SAM 3.1 · Muse Spark · MuJoCo</span>
+          <a href="https://github.com/Likhith-BlueLotus/TwinProof">GitHub</a>
+        </div>
+      </footer>
+    </main>
+
+    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" inert>
+      <div class="menu-backdrop" data-close></div>
+      <div class="menu-panel">
+        <div class="menu-top">
+          <a class="brand" href="/"><svg class="mark"><use href="#mark" /></svg>TwinProof</a>
+          <button class="round-close light" data-close aria-label="Close menu" data-hover-root><svg data-hover='{"to":{"rotate":90},"cfg":[300,18]}'><use href="#x" /></svg></button>
+        </div>
+        <nav class="menu-links" aria-label="Menu">
+          <a href="#pipeline">Pipeline</a><a href="#rigs">Rigs</a><a href="#log">Verdicts</a><a href="/console.html">Console</a>
+        </nav>
+        <div class="menu-bottom">
+          <button class="pill light" data-open-take data-hover-root>Film your own take<svg data-hover='{"to":{"x":5},"cfg":[320,20]}'><use href="#arrow" /></svg></button>
+          <a href="https://github.com/Likhith-BlueLotus/TwinProof">GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="take" role="dialog" aria-modal="true" aria-labelledby="take-title" inert>
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-panel">
+        <div class="modal-head">
+          <div>
+            <span class="eyebrow">Your own take</span>
+            <h2 id="take-title" class="lines modal-title" data-reveal='{"stagger":90,"duration":800}' data-manual><span>Film your</span><span>own take</span></h2>
+          </div>
+          <button class="round-close" data-close aria-label="Close" data-hover-root><svg data-hover='{"to":{"rotate":90},"cfg":[300,18]}'><use href="#x" /></svg></button>
+        </div>
+        <ol class="take-steps">
+          <li><span><strong>Print the marker</strong> at 100% and measure its side with a ruler.</span></li>
+          <li><span><strong>Film about 10 seconds</strong> with the phone on a stand, the marker and the object both in frame.</span></li>
+          <li><span><strong>Run the pipeline</strong> on your take, then open the run in the console:</span></li>
+        </ol>
+        <div class="code">
+          <pre id="take-code">uv run --env-file .env python -m scripts.run_s1_video take.mp4 --side 0.07 --noun ruler
+uv run --env-file .env python -m scripts.run_agent_s1 logs/runs/take_s1.npz</pre>
+          <button class="copy" id="take-copy">Copy</button>
+        </div>
+        <button class="pill solid done" data-close>Done</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/landing/landing.js"></script>
   </body>
 </html>
