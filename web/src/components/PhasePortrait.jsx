@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
 // Observed (dots) vs twin (line) in (angle, rate); a marker follows the video time.
-export default function PhasePortrait({ phase, timeRef }) {
+export default function PhasePortrait({ phase, timeRef, theme }) {
   const canvas = useRef(null)
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function PhasePortrait({ phase, timeRef }) {
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
-  }, [phase, timeRef])
+  }, [phase, timeRef, theme]) // theme: re-read the token colours
 
   return <canvas ref={canvas} role="img" aria-label="Phase portrait: observed states against the twin's prediction" />
 }

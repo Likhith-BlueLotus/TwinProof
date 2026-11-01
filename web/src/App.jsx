@@ -22,7 +22,16 @@ export default function App() {
   const [whatIfRecord, setWhatIfRecord] = useState(null)
   const [error, setError] = useState(null)
   const [view, setView] = useState('runs')
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'dark')
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light'
+    document.documentElement.dataset.theme = next
+    try { localStorage.setItem('theme', next) } catch { /* private mode: the choice lasts this visit */ }
+    setTheme(next)
+  }
   const timeRef = useRef(0)
+  const currentRun = useRef(runId)
+  currentRun.current = runId
 
   useEffect(() => {
     listRuns().then((rs) => {
@@ -33,8 +42,10 @@ export default function App() {
 
   useEffect(() => {
     if (!runId) return
-    setRun(null); setWhatIfRecord(null); setCursor(Infinity)
-    getRun(runId).then(setRun).catch((e) => setError(e.message))
+    let live = true // a slow response for an earlier pick must not overwrite this one
+    setRun(null); setWhatIfRecord(null); setCursor(Infinity); setError(null)
+    getRun(runId).then((r) => live && setRun(r)).catch((e) => live && setError(e.message))
+    return () => { live = false }
   }, [runId])
 
   const rows = useMemo(() => (run ? rowsFromEvents(run.events) : []), [run])
@@ -61,19 +72,25 @@ export default function App() {
         <div className="spacer" />
         {provider?.slug && (
           <span className={`badge${isDev ? ' dev' : ''}`} title={isDev ? 'Muse Spark Open keys pending: Muse Spark 1.3 stands in' : 'Muse Spark Open'}>
-            <span className="dot" />{provider.slug}{isDev ? ' · dev fallback' : ` · ${provider.provider}`}
+            <span className="dot" />{provider.slug}
           </span>
         )}
-        <div className="tabs" role="tablist" aria-label="View">
+        <div className="tabs" role="group" aria-label="View">
           {[['runs', 'Agent runs'], ['bench', 'Benchmark']].map(([k, label]) => (
-            <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}>{label}</button>
+            <button key={k} aria-pressed={view === k} onClick={() => setView(k)}>{label}</button>
           ))}
         </div>
+        <button className="theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}>
+          {theme === 'light' ? 'Dark' : 'Light'}
+        </button>
         {view === 'runs' && (
-          <label className="tagline">Run{' '}
-            <select value={runId ?? ''} onChange={(e) => setRunId(e.target.value)} aria-label="Agent run">
-              {runs.map((r) => <option key={r.id} value={r.id}>{runLabel(r)}</option>)}
-            </select>
+          <label className="run-picker">
+            <span>Run</span>
+            <span className="select">
+              <select value={runId ?? ''} onChange={(e) => setRunId(e.target.value)} aria-label="Agent run">
+                {runs.map((r) => <option key={r.id} value={r.id}>{runLabel(r)}</option>)}
+              </select>
+            </span>
           </label>
         )}
       </header>
@@ -81,6 +98,8 @@ export default function App() {
       {error && <p className="empty" role="alert">{error}. Is the API running on :8000?</p>}
 
       {view === 'bench' && <BenchmarkView />}
+
+      {view === 'runs' && !run && runId && !error && <p className="empty">Loading run…</p>}
 
       {view === 'runs' && run && (
         <main className="main">
@@ -101,14 +120,18 @@ export default function App() {
                     <span><i style={{ background: 'var(--twin)' }} />twin</span>
                   </span>
                 </h2>
-                <PhasePortrait phase={run.overlay.phase} timeRef={timeRef} />
+                <PhasePortrait phase={run.overlay.phase} timeRef={timeRef} theme={theme} />
               </section>
             )}
           </div>
           <div className="col">
             <VerdictCard record={whatIfRecord || latestVerdict} label={whatIfRecord ? `What-if · ${JSON.stringify(whatIfRecord.what_if)}` : null} />
-            <WhatIf disabled={!run.summary.admitted || replaying}
-              onSubmit={async (body) => setWhatIfRecord(await whatIf(runId, body))} />
+            <WhatIf key={runId} disabled={!run.summary.admitted || replaying}
+              onSubmit={async (body) => {
+                const id = runId
+                const record = await whatIf(id, body)
+                if (currentRun.current === id) setWhatIfRecord(record) // drop a result for a run the user left
+              }} />
             <ClaimStream rows={shown} replaying={replaying}
               onReplay={() => { setWhatIfRecord(null); setCursor(0) }} />
           </div>

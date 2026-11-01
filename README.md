@@ -75,7 +75,7 @@ Built and tested (Python suite + the voice-parser test):
 
 Not done:
 - **No certified controller on real hardware.** The next rig change is a ball-bearing pivot instead of a ruler hole on a nail.
-- **Muse Spark Open:** waits on Baseten/Fireworks keys; until then runs use Muse Spark 1.3, labelled "dev fallback" in the UI.
+- **Muse Spark Open:** waits on Baseten/Fireworks keys; until then runs use Muse Spark 1.3; the UI badge names the model, and its tooltip says it stands in for Spark Open.
 - **Glimmer:** the SFT data generator works; QLoRA training and serving wait on Modal.
 - **S3 (door + Panda):** cut at the go/no-go gate (no footage).
 

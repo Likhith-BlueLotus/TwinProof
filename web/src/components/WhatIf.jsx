@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { parseCommand } from '../voice.js'
 
 const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
@@ -17,6 +17,7 @@ export default function WhatIf({ disabled, onSubmit }) {
   const [heard, setHeard] = useState(null)
   const [listening, setListening] = useState(false)
   const rec = useRef(null)
+  useEffect(() => () => rec.current?.abort(), []) // leaving the run or view turns the mic off
   const body = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== '').map(([k, v]) => [k, Number(v)]))
 
   const run = async (b) => {
@@ -39,7 +40,8 @@ export default function WhatIf({ disabled, onSubmit }) {
     }
     r.onerror = (e) => setError(`Microphone: ${e.error}`)
     r.onend = () => setListening(false)
-    rec.current = r; setHeard(null); setListening(true); r.start()
+    rec.current = r; setHeard(null)
+    try { r.start(); setListening(true) } catch (err) { setError(`Microphone: ${err.message}`) }
   }
   return (
     <section className="panel">

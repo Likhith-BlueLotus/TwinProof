@@ -10,7 +10,7 @@ body {
 }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 /* browser-drawn surfaces wear the palette too */
-:root { color-scheme: dark; scrollbar-color: var(--border-strong) transparent; }
+:root { scrollbar-color: var(--border-strong) transparent; }
 ::selection { background: color-mix(in srgb, var(--twin) 35%, transparent); color: var(--fg); }
 input { caret-color: var(--twin); }
 
@@ -23,7 +23,8 @@ input { caret-color: var(--twin); }
 }
 
 /* header */
-.header { display: flex; align-items: center; gap: var(--space-4); }
+.header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.header > div:first-child { white-space: nowrap; }
 .wordmark { font-size: var(--text-lg); font-weight: 700; letter-spacing: -0.01em; }
 .wordmark span { color: var(--twin); }
 .tagline { color: var(--fg-subtle); font-size: var(--text-sm); }
@@ -42,6 +43,23 @@ select, input {
   padding: var(--space-2) var(--space-3); font: inherit;
 }
 select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* fields: the ring hugs the border instead of floating 2px outside it as a second frame */
+select:focus-visible, input:focus-visible { outline: none; border-color: var(--focus-ring); box-shadow: 0 0 0 3px var(--twin-soft); }
+
+/* run picker: label and select on one baseline, our own chevron instead of the browser's */
+.run-picker { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; max-width: 100%; color: var(--fg-subtle); font-size: var(--text-sm); }
+.select { position: relative; display: inline-flex; min-width: 0; max-width: 380px; }
+.select select {
+  appearance: none; -webkit-appearance: none; min-width: 0; max-width: min(380px, 100%); width: 100%;
+  padding-right: calc(var(--space-3) * 2 + 10px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  cursor: pointer; transition: border-color var(--dur-press) ease, box-shadow var(--dur-press) ease;
+}
+.select::after {
+  content: ""; position: absolute; right: var(--space-3); top: 50%; width: 7px; height: 7px; pointer-events: none;
+  border-right: 1.5px solid var(--fg-muted); border-bottom: 1.5px solid var(--fg-muted);
+  transform: translateY(-70%) rotate(45deg);
+}
+@media (hover: hover) and (pointer: fine) { .select select:hover { border-color: var(--fg-faint); } }
 
 /* layout */
 .main { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(380px, 1fr); gap: var(--space-4); min-height: 0; }
@@ -157,8 +175,8 @@ button.primary { background: var(--button-primary-bg); color: var(--button-prima
 /* view tabs */
 .tabs { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--border-strong); border-radius: 999px; }
 .tabs button { border: 0; border-radius: 999px; background: transparent; color: var(--fg-subtle); padding: var(--space-1) var(--space-4); }
-.tabs button[aria-selected="true"] { background: var(--surface-sunken); color: var(--fg); }
-@media (hover: hover) and (pointer: fine) { .tabs button:not([aria-selected="true"]):hover { color: var(--fg); background: transparent; } }
+.tabs button[aria-pressed="true"] { background: var(--surface-sunken); color: var(--fg); }
+@media (hover: hover) and (pointer: fine) { .tabs button:not([aria-pressed="true"]):hover { color: var(--fg); background: transparent; } }
 
 /* benchmark view */
 .bench { display: flex; flex-direction: column; gap: var(--space-4); min-height: 0; overflow-y: auto; }
@@ -196,12 +214,13 @@ table.arms td.mono:not(.best) { color: var(--fg-muted); }
 /* voice what-if: the live state is a state indicator, so it gets colour, not motion */
 .mic.live { border-color: var(--observed); color: var(--observed); }
 .badge, .tabs button { white-space: nowrap; }
+.theme-toggle { white-space: nowrap; }
 @media (max-width: 700px) {
   .header { flex-wrap: wrap; }
   .header .spacer { display: none; }
   .app { padding: var(--space-4); }
-  .header label { display: grid; gap: var(--space-1); width: 100%; }
-  .header select { width: 100%; min-width: 0; }
+  .run-picker { width: 100%; }
+  .run-picker .select, .run-picker select { flex: 1; max-width: none; width: 100%; }
   .panel-title { flex-wrap: wrap; }
   .legend { margin-left: 0; flex-wrap: wrap; }
 }

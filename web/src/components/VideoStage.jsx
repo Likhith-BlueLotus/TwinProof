@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-const TWIN = getComputedStyle(document.documentElement).getPropertyValue('--twin').trim() || '#4fd6e8'
+const twinColor = () => getComputedStyle(document.documentElement).getPropertyValue('--twin').trim() || '#4fd6e8'
 
 // Video with the ghost twin drawn on the exact frame being shown; publishes media time via timeRef.
 export default function VideoStage({ src, size, overlay, timeRef }) {
@@ -18,6 +18,7 @@ export default function VideoStage({ src, size, overlay, timeRef }) {
       timeRef.current = mediaTime
       setT(mediaTime)
       ctx.clearRect(0, 0, size[0], size[1])
+      const TWIN = twinColor() // read per frame so a theme switch recolours the ghost
       if (!overlay) return
       // the twin starts at t0 (decimation edge trim): hold its first pose before that
       const k = Math.max(0, Math.round((mediaTime - overlay.t0) * overlay.fps))

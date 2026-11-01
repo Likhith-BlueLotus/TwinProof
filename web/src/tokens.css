@@ -1,6 +1,7 @@
 /* TwinProof design tokens: primitive -> semantic -> component. Components never use raw values. */
 
 :root {
+  color-scheme: dark;
   /* ---- primitive ---- */
   --ink-950: #07090c;
   --ink-900: #0c1015;
@@ -95,4 +96,32 @@
   --input-bg: var(--surface-sunken);
   --input-border: var(--border-strong);
   --focus-ring: var(--twin);
+}
+
+/* Light theme: same roles, accents darkened to keep text >= 4.5:1 on white panels */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-raised: #f3f5f8;
+  --surface-sunken: #eceff3;
+  --border: #dde2e8;
+  --border-strong: #c5ccd6;
+  --fg: #121820;
+  --fg-muted: #4a5565;
+  --fg-subtle: #5c6878;
+  --fg-faint: #7b8696;
+
+  --twin: #0a7487;
+  --twin-soft: rgb(10 116 135 / 0.14);
+  --observed: #a35f00;
+  --admitted: #16794a;
+  --admitted-soft: rgb(22 121 74 / 0.1);
+  --rejected: #c42f2a;
+  --rejected-soft: rgb(196 47 42 / 0.09);
+  --refused: #b0560c;
+  --refused-soft: rgb(176 86 12 / 0.1);
+
+  --button-bg-hover: #e3e7ec;
+  --button-primary-fg: #ffffff;
 }
