@@ -9,6 +9,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* browser-drawn surfaces wear the palette too */
+:root { color-scheme: dark; scrollbar-color: var(--border-strong) transparent; }
+::selection { background: color-mix(in srgb, var(--twin) 35%, transparent); color: var(--fg); }
+input { caret-color: var(--twin); }
 
 .app {
   display: grid;
@@ -111,7 +115,10 @@ button.primary { background: var(--button-primary-bg); color: var(--button-prima
 .footnote { color: var(--fg-faint); font-size: var(--text-xs); }
 
 /* claim stream */
-.stream { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+/* the right column scrolls as a whole, so the stream never shrinks below a readable height */
+.main > .col:last-child { overflow-y: auto; overflow-anchor: none; scrollbar-gutter: stable; }
+.col > .panel { flex-shrink: 0; }
+.stream { display: flex; flex-direction: column; flex: 1 0 300px; min-height: 300px; }
 .stream-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; }
 .row {
   display: grid; grid-template-columns: 76px 1fr; gap: var(--space-3); align-items: start;
@@ -131,7 +138,7 @@ button.primary { background: var(--button-primary-bg); color: var(--button-prima
 /* what-if */
 .whatif { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); }
 .whatif label { display: grid; gap: var(--space-1); color: var(--fg-subtle); font-size: var(--text-xs); }
-.whatif input { width: 96px; }
+.whatif input { width: 80px; }
 
 .footer { display: flex; justify-content: space-between; color: var(--fg-faint); font-size: var(--text-xs); }
 .empty { color: var(--fg-subtle); padding: var(--space-5); text-align: center; }
@@ -193,4 +200,8 @@ table.arms td.mono:not(.best) { color: var(--fg-muted); }
   .header { flex-wrap: wrap; }
   .header .spacer { display: none; }
   .app { padding: var(--space-4); }
+  .header label { display: grid; gap: var(--space-1); width: 100%; }
+  .header select { width: 100%; min-width: 0; }
+  .panel-title { flex-wrap: wrap; }
+  .legend { margin-left: 0; flex-wrap: wrap; }
 }

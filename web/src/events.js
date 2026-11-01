@@ -5,6 +5,8 @@ export const GATE_ORDER = ['G7', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5']
 const HOLD_MS = { verdict: 1400, fit: 900, default: 320 } // replay pacing: verdicts get time to be read
 
 const fmt = (v, digits = 3) => (typeof v === 'number' ? Number(v.toPrecision(digits)).toString() : String(v))
+// MJCF attributes are space-separated number strings ("1.00000094 0.005 1e-06")
+const fmtAttr = (v) => String(v).split(' ').map((t) => (t !== '' && Number.isFinite(+t) ? fmt(+t) : t)).join(' ')
 
 export function rowsFromEvents(events) {
   const rows = []
@@ -32,7 +34,7 @@ export function rowsFromEvents(events) {
         kind: 'claim', label: 'Claim',
         text: `${d.ref} · ${d.type}`,
         detail: s ? (s.gains ? `gains ${s.gains.map((g) => fmt(g)).join(', ')}` : `LQR Q ${s.q_diag.join('/')} R ${s.r_diag.join('/')}`) + ` · u_max ${s.u_max}`
-          : Object.entries(d.patch).map(([k, v]) => `${k.split('@').pop()}=${v}`).join(' '),
+          : Object.entries(d.patch).map(([k, v]) => `${k.split('@').pop()} ${fmtAttr(v)}`).join(' · '),
       })
     } else if (e.kind === 'verdict') {
       rows.push({ kind: 'verdict', label: d.verdict, status: d.verdict.toLowerCase(), text: d.claim_id, detail: d.reason || 'all gates pass', record: d })
