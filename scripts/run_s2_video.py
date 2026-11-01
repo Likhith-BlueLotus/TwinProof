@@ -116,6 +116,7 @@ def main() -> None:
 
     result = {"video": str(args.video), "noun": noun, "box": box, "marker_frames": marker_frames, "size": [w, h],
               "frames_roll": int(stop - start), "release_frame": int(moving[0]), "stop_frame": stop,
+              "start_frame": int(start), "t_start_video": float(t[start]), "start_xy_m": tr.xy[start].tolist(),  # ghost-can anchor
               "scale_correction": float(scale), "apparent_radius_m": float(np.sqrt(area_rest / np.pi)),
               "path_axis": axis.tolist(), "path_flatness": flatness, "path_angle_deg_from_x": float(np.degrees(np.arctan2(axis[1], axis[0]))),
               "distance_m": float(s[-1]), "rotation_rad": float(psi_full[-1]),

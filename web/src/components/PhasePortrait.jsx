@@ -28,7 +28,8 @@ export default function PhasePortrait({ phase, timeRef }) {
       ctx.strokeStyle = colors.grid; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke()
       ctx.fillStyle = colors.label; ctx.font = '12px Geist Mono, monospace'
-      ctx.fillText('θ (rad)', w - 58, h / 2 - 6); ctx.fillText('θ̇ (rad/s)', w / 2 + 6, 14)
+      const [xLabel, yLabel] = phase.labels || ['θ (rad)', 'θ̇ (rad/s)']
+      ctx.fillText(xLabel, w - 58, h / 2 - 6); ctx.fillText(yLabel, w / 2 + 6, 14)
 
       ctx.strokeStyle = colors.twin; ctx.lineWidth = 2; ctx.globalAlpha = 0.9
       ctx.beginPath(); twQ.forEach((q, i) => (i ? ctx.lineTo(X(q), Y(twV[i])) : ctx.moveTo(X(q), Y(twV[i])))); ctx.stroke()
@@ -47,5 +48,5 @@ export default function PhasePortrait({ phase, timeRef }) {
     return () => cancelAnimationFrame(raf)
   }, [phase, timeRef])
 
-  return <canvas ref={canvas} role="img" aria-label="Phase portrait: observed pendulum states against the twin's prediction" />
+  return <canvas ref={canvas} role="img" aria-label="Phase portrait: observed states against the twin's prediction" />
 }

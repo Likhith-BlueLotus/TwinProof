@@ -21,6 +21,15 @@ export default function VideoStage({ src, size, overlay, timeRef }) {
       if (!overlay) return
       // the twin starts at t0 (decimation edge trim): hold its first pose before that
       const k = Math.max(0, Math.round((mediaTime - overlay.t0) * overlay.fps))
+      if (overlay.kind === 's2') {  // ghost can: a ring on the twin's position along the roll
+        const c = overlay.center_px[k]
+        if (!c) return
+        ctx.strokeStyle = TWIN; ctx.lineWidth = 4; ctx.globalAlpha = 0.9
+        ctx.beginPath(); ctx.arc(c[0], c[1], overlay.radius_px, 0, Math.PI * 2); ctx.stroke()
+        ctx.globalAlpha = 1; ctx.fillStyle = TWIN; ctx.font = '600 18px Geist, sans-serif'
+        ctx.fillText('TWIN', c[0] - 22, c[1] - overlay.radius_px - 10)
+        return
+      }
       const tip = overlay.tip_px[k]
       if (!tip) return
       const [px, py] = overlay.pivot_px

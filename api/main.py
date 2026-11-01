@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "logs" / "runs"
 VIDEOS = ROOT / "data" / "videos"
 MODEL = ROOT / "physics" / "models" / "s1_pendulum.xml"
-RUN_ID = re.compile(r"^agent_[A-Za-z0-9_]+_\d{8}T\d{6}$")
+RUN_ID = re.compile(r"^(agent|verify)_[A-Za-z0-9_]+_\d{8}T\d{6}$")  # verify_: S2 verifier runs, no agent
 GOAL = float(np.pi)
 
 app = FastAPI(title="TwinProof")
@@ -111,19 +111,47 @@ def benchmark() -> dict:
 
 @app.get("/api/runs")
 def list_runs() -> list[dict]:
-    ids = sorted((p.stem for p in RUNS.glob("agent_*.jsonl") if RUN_ID.match(p.stem)), reverse=True)
+    ids = sorted((p.stem for p in RUNS.glob("*.jsonl") if RUN_ID.match(p.stem)), reverse=True)
     return [_summary(i, _events(i)) for i in ids]
 
 
 @app.get("/api/runs/{run_id}")
 def get_run(run_id: str) -> dict:
     events = _events(run_id)
-    meta, track = _track(_track_stem(run_id, events))
-    out = {"summary": _summary(run_id, events), "events": events, "video": {"size": meta["size"]}}
+    stem = _track_stem(run_id, events)
+    meta, track = _track(stem)
+    out = {"summary": _summary(run_id, events), "events": events,
+           "video": {"size": meta["size"], "available": _video_path(meta) is not None}}
     evidence = next((e["data"] for e in reversed(events) if e["kind"] == "evidence"), None)
     if evidence:
-        out["overlay"] = _overlay(meta, track, evidence)
+        out["overlay"] = _overlay_s2(stem, meta, track, evidence) if "s" in track else _overlay(meta, track, evidence)
     return out
+
+
+def _overlay_s2(stem: str, meta: dict, track: dict, evidence: dict) -> dict:
+    """Ghost can on the observed straight path: the twin's distance s(t), mapped back through the scale and homography."""
+    from physics.identify_s2 import release_time, residuals
+    base = ((RUNS / stem).parent / "s2_model.xml").read_text()  # run_s2_identify's convention: the rig folder's model
+    t, s, psi = track["t"], track["s"], track["psi"]
+    x = np.asarray(evidence["x"])
+    s_twin = s - residuals(base, x, t, s, psi, release_time(t, s))[0]
+    axis, scale = np.asarray(meta["path_axis"]), meta["scale_correction"]
+    centers = np.asarray(meta["start_xy_m"]) + np.outer(s_twin / scale, axis)  # marker-plane metres (unscaled)
+    H_inv = np.linalg.inv(np.asarray(meta["H"]))
+
+    def to_px(pts: np.ndarray) -> np.ndarray:
+        h = np.c_[pts, np.ones(len(pts))] @ H_inv.T
+        return h[:, :2] / h[:, 2:]
+
+    rim = to_px(np.array([centers[0], centers[0] + [meta["apparent_radius_m"], 0.0]]))
+    return {
+        "kind": "s2", "t0": float(meta["t_start_video"]), "fps": 60.0,
+        "center_px": to_px(centers).round(1).tolist(), "radius_px": float(np.linalg.norm(rim[1] - rim[0])),
+        "phase": {"t": (t + meta["t_start_video"]).round(4).tolist(), "labels": ["s (m)", "ṡ (m/s)"],
+                  "obs": [s.round(5).tolist(), np.gradient(s, t).round(4).tolist()],
+                  "twin": [s_twin.round(5).tolist(), np.gradient(s_twin, t).round(4).tolist()]},
+        "n_fit": evidence["n_fit"],
+    }
 
 
 def _overlay(meta: dict, track: dict, evidence: dict) -> dict:
@@ -160,11 +188,16 @@ def _overlay(meta: dict, track: dict, evidence: dict) -> dict:
 
 @app.get("/api/runs/{run_id}/video")
 def get_video(run_id: str) -> FileResponse:
-    meta, _ = _track(_track_stem(run_id, _events(run_id)))
-    path = (ROOT / meta["video"]).resolve()
-    if VIDEOS.resolve() not in path.parents or not path.exists():
+    path = _video_path(_track(_track_stem(run_id, _events(run_id)))[0])
+    if path is None:
         raise HTTPException(404, "video unavailable")
     return FileResponse(path, media_type="video/mp4")
+
+
+def _video_path(meta: dict) -> Path | None:
+    """The track's video if it is still on disk inside data/videos (re-filmed takes are not kept)."""
+    path = (ROOT / meta["video"]).resolve()
+    return path if VIDEOS.resolve() in path.parents and path.exists() else None
 
 
 @app.post("/api/runs/{run_id}/whatif")

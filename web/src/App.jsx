@@ -9,7 +9,8 @@ import WhatIf from './components/WhatIf.jsx'
 import BenchmarkView from './components/BenchmarkView.jsx'
 
 // recorded tracks -> the rig they came from (archived rigs live in sub-folders of logs/runs)
-const RIGS = { s1_s1: 'S1 synthetic', take3_s1: 'S1 real · 31 Oct', 'nov01/take3_s1': 'S1 real · finger-held pin', 'nov01_clamped/take3_s1': 'S1 real · clamped pin' }
+const RIGS = { s1_s1: 'S1 synthetic', take3_s1: 'S1 real · 31 Oct', 'nov01/take3_s1': 'S1 real · finger-held pin', 'nov01_clamped/take3_s1': 'S1 real · clamped pin',
+  s2_incline_take1_s2: 'S2 real · 12° ramp, 31 Oct', 'nov01_s2/s2_incline_take2_s2': 'S2 real · 8° board, 1 Nov' }
 const rigName = (r) => RIGS[r.track] || r.track || r.id
 const runLabel = (r) => `${rigName(r)} · ${r.admitted}/${r.claims} admitted · ${r.id.slice(-15, -7)}`
 
@@ -58,7 +59,7 @@ export default function App() {
           <div className="tagline">Film it. Twin it. Prove it.</div>
         </div>
         <div className="spacer" />
-        {provider && (
+        {provider?.slug && (
           <span className={`badge${isDev ? ' dev' : ''}`} title={isDev ? 'Muse Spark Open keys pending: Muse Spark 1.3 stands in' : 'Muse Spark Open'}>
             <span className="dot" />{provider.slug}{isDev ? ' · dev fallback' : ` · ${provider.provider}`}
           </span>
@@ -88,7 +89,9 @@ export default function App() {
               <h2 className="panel-title">Reality vs twin
                 <span className="legend"><span><i style={{ background: 'var(--twin)' }} />twin (identified)</span><span>video: SAM 3.1-tracked</span></span>
               </h2>
-              <VideoStage src={videoUrl(runId)} size={run.video.size} overlay={run.overlay} timeRef={timeRef} />
+              {run.video.available
+                ? <VideoStage src={videoUrl(runId)} size={run.video.size} overlay={run.overlay} timeRef={timeRef} />
+                : <p className="empty">Video not kept: this take was re-filmed. The fit, verdicts and phase portrait come from its logged track.</p>}
             </section>
             {run.overlay && (
               <section className="panel phase">

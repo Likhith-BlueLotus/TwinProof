@@ -23,7 +23,8 @@ export function rowsFromEvents(events) {
       rows.push({
         kind: 'fit', label: 'Fit',
         text: `${d.structure}: ${d.identifiable ? 'identifiable' : 'not identifiable'}`,
-        detail: `damping ${fmt(p.damping)} · frictionloss ${fmt(p.frictionloss)} · BIC ${fmt(d.bic, 5)}`,
+        detail: 'damping' in p ? `damping ${fmt(p.damping)} · frictionloss ${fmt(p.frictionloss)} · BIC ${fmt(d.bic, 5)}`
+          : Object.entries(p).map(([k, v]) => `${k} ${fmt(v)}`).join(' · '),
       })
     } else if (e.kind === 'claim') {
       const s = d.spec
@@ -36,7 +37,7 @@ export function rowsFromEvents(events) {
     } else if (e.kind === 'verdict') {
       rows.push({ kind: 'verdict', label: d.verdict, status: d.verdict.toLowerCase(), text: d.claim_id, detail: d.reason || 'all gates pass', record: d })
     } else if (e.kind === 'final') {
-      rows.push({ kind: 'final', label: 'Stop', text: d.error ? `error: ${d.error}` : 'agent finished' })
+      rows.push({ kind: 'final', label: 'Stop', text: d.error ? `error: ${d.error}` : d.text === 'verifier finished' ? d.text : 'agent finished' })
     }
   }
   return rows.map((r, i) => ({ ...r, id: i, hold: HOLD_MS[r.kind] ?? HOLD_MS.default }))

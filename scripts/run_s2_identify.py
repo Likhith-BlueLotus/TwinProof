@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 import numpy as np
 
 from physics.fit_cmaes import fit, identifiability, laplace
-from physics.identify_s2 import FREE_PHYSICAL, NAMES, bounds, classify_contact, make_objective, release_time, residuals
+from physics.identify_s2 import FREE_PHYSICAL, NAMES, bounds, patch_for, classify_contact, make_objective, release_time, residuals
 from verifier.s2 import verify_s2_structure
 
 RUNS = Path("logs/runs")
@@ -79,7 +80,32 @@ def main() -> None:
         out["heldout"][f"take{k}"] = {"nrmse_s": nrmse(rs, sk), "max_abs_s_mm": float(np.abs(rs).max() * 1000),
                                       "slip": classify_contact(tk, sk, psik, RADIUS)}
     (args.dir / "s2_identify.json").write_text(json.dumps(out, indent=1, default=float))
+    write_run_log(args.dir, args.ident, base, r, out)
     print(json.dumps(out, indent=1, default=float))
+
+
+def write_run_log(runs: Path, ident: int, base: str, r: dict, out: dict) -> Path:
+    """The verdict as a console run (same event format as the S1 agent logs, with no agent in the loop)."""
+    tag = "s2" if runs == RUNS else runs.name
+    path = RUNS / f"verify_{tag}_take{ident}_{time.strftime('%Y%m%dT%H%M%S')}.jsonl"
+    failed = [g for g, v in out["gates"].items() if not v["pass"]]
+    x = r["x"]
+    events = [
+        ("session", {"track": str(runs / f"s2_incline_take{ident}_s2.npz"), "model": str(runs / "s2_model.xml"), "scenario": "S2"}),
+        ("fit", {"structure": r["structure"], "identifiable": r["identifiable"], "reason": r["reason"],
+                 "params": {"beta": out["beta"], "slip": out["relative_slip"]}, "rel_std": {"beta": out["beta_rel_std"]}}),
+        ("claim", {"ref": "s2-1", "type": "structure", "patch": patch_for(base, x)}),
+        ("evidence", {"structure": r["structure"], "x": x.tolist(), "n_fit": int(FIT_FRACTION * take(ident, runs)[0].size)}),
+        ("verdict", {"claim_id": "s2-1", "type": "structure", "proposer": "identification (no agent)",
+                     "gates": {g: {k: v for k, v in w.items() if k != "feedback"} for g, w in out["gates"].items()},
+                     "verdict": "REFUSED" if failed else "ADMITTED",
+                     "reason": out["gates"][failed[0]]["feedback"] if failed else None}),
+        ("final", {"text": "verifier finished"}),
+    ]
+    with path.open("w") as f:
+        for kind, data in events:
+            f.write(json.dumps({"t": time.time(), "kind": kind, "data": data}, default=float) + "\n")
+    return path
 
 
 if __name__ == "__main__":

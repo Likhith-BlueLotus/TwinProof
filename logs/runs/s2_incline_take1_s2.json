@@ -15,6 +15,12 @@
  "frames_roll": 55,
  "release_frame": 226,
  "stop_frame": 275,
+ "start_frame": 220,
+ "t_start_video": 3.673444,
+ "start_xy_m": [
+  -0.11231917370740688,
+  0.0699959394738157
+ ],
  "scale_correction": 0.9052830916389986,
  "apparent_radius_m": 0.03590037227046773,
  "path_axis": [

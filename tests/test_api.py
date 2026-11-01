@@ -77,3 +77,27 @@ def test_track_outside_runs_folder_is_refused():
     with pytest.raises(HTTPException) as e:
         _track("../../pyproject")
     assert e.value.status_code == 400
+
+
+S2_RUN = next((p.stem for p in sorted(RUNS.glob("verify_s2_take1_*.jsonl"))), None)
+
+
+@pytest.mark.skipif(S2_RUN is None, reason="no recorded S2 verifier run")
+def test_s2_ghost_can_follows_the_observed_roll():
+    d = client.get(f"/api/runs/{S2_RUN}").json()
+    o = d["overlay"]
+    assert o["kind"] == "s2" and d["summary"]["claims"] == 1
+    obs_s, twin_s = (np.asarray(v) for v in (o["phase"]["obs"][0], o["phase"]["twin"][0]))
+    assert len(o["center_px"]) == obs_s.size
+    # the ghost travels as far as the can did: end-to-end pixel path vs metres, within the G1 error scale
+    path_px = np.linalg.norm(np.subtract(o["center_px"][-1], o["center_px"][0]))
+    assert abs(twin_s[-1] - obs_s[-1]) < 0.1 * np.ptp(obs_s) and path_px > 5 * o["radius_px"]
+
+
+def test_runs_whose_video_was_replaced_say_so():
+    runs = client.get("/api/runs").json()
+    finger = next((r["id"] for r in runs if r["track"] == "nov01/take3_s1"), None)
+    if finger is None:
+        pytest.skip("no finger-held-pin run recorded")
+    assert client.get(f"/api/runs/{finger}").json()["video"]["available"] is False
+    assert client.get(f"/api/runs/{finger}/video").status_code == 404
