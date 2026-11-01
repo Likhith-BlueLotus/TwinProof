@@ -1,8 +1,8 @@
 """Three-arm benchmark (master doc §4): A0 default physics, A1 unverified agent, A2 TwinProof.
 
 Run: uv run python -m bench.run_all --write-benchmark   ->  bench/results.json, BENCHMARK.md result tables
-Reality for control is a twin re-identified from a held-out take (real S1: take 1), or the known physics for
-the synthetic take. Every controller is designed on its own arm's model and run on 256 reality samples.
+Reality for control is a twin re-identified from a held-out take (real S1: take 1 of each rig), or the known physics
+for the synthetic take. S2 contributes held-out prediction units only (A0 vs A2; no S2 control task, no S2 agent). Every controller is designed on its own arm's model and run on 256 reality samples.
 """
 from __future__ import annotations
 
@@ -29,9 +29,20 @@ START_ANGLE, START_RATE = 0.2, 0.5  # rad, rad/s: disturbances around upright
 SUCCESS_TOL, FALL_ANGLE = 0.05, 1.0  # rad
 DEFAULT_SPEC = dict(q_diag=(10.0, 0.1), r_diag=(10.0,))
 GOAL = float(np.pi)
+S2_A0_X = np.r_[np.log([0.6, 2e-4, 5.0, 0.01]), 0, 0, 0, np.log(0.5)]  # base model: solid can, its default friction
+S2_SCENARIOS = {
+    "S2 real · 12° ramp, 31 Oct": dict(dir="logs/runs", ident=1, heldout=[2, 3]),
+    "S2 real · 8° board, 1 Nov": dict(dir="logs/runs/nov01_s2", ident=2, heldout=[1, 3]),
+}
 SCENARIOS = {
-    "S1 real": dict(model="logs/runs/take3_model.xml", ident="take3_s1", heldout=["take1_s1", "take2_s1"],
-                    reality="take1_s1", agent="agent_take3_s1_20261031T194821"),
+    "S1 real · 31 Oct": dict(model="logs/runs/take3_model.xml", ident="take3_s1", heldout=["take1_s1", "take2_s1"],
+                             reality="take1_s1", agent="agent_take3_s1_20261031T194821"),
+    "S1 real · finger-held pin": dict(model="logs/runs/nov01/take3_model.xml", ident="nov01/take3_s1",
+                                      heldout=["nov01/take1_s1", "nov01/take2_s1"], reality="nov01/take1_s1",
+                                      agent="agent_take3_s1_20261101T161025"),
+    "S1 real · clamped pin": dict(model="logs/runs/nov01_clamped/take3_model.xml", ident="nov01_clamped/take3_s1",
+                                  heldout=["nov01_clamped/take1_s1", "nov01_clamped/take2_s1"], reality="nov01_clamped/take1_s1",
+                                  agent="agent_take3_s1_20261101T160606"),
     "S1 synthetic": dict(model="physics/models/s1_pendulum.xml", ident="s1_s1", heldout=[], reality=None,
                          agent="agent_s1_s1_20261030T215843"),
 }
@@ -104,6 +115,13 @@ def _spec(claim: dict) -> LQRSpec:
     return LQRSpec(GOAL, tuple(s["q_diag"]), tuple(s["r_diag"]), s["u_max"], tuple(s["gains"]) if s["gains"] else None)
 
 
+def refusal_reason(verdicts: list[dict]) -> str | None:
+    """Why no controller shipped: the last refused controller claim (a later structure patch's rejection is not it)."""
+    refused = [v for v in verdicts if v["verdict"] != "ADMITTED"]
+    ctrl = [v for v in refused if v["type"] == "controller"]
+    return (ctrl or refused or [{"reason": None}])[-1]["reason"]
+
+
 def run_scenario(name: str, cfg: dict, seed: int) -> dict:
     rng = np.random.default_rng(seed)
     model_xml = Path(cfg["model"]).read_text()
@@ -117,11 +135,11 @@ def run_scenario(name: str, cfg: dict, seed: int) -> dict:
     if cfg["reality"]:
         rctx = fit_all(model_xml, cfg["reality"])
         reality = reality_models(model_xml, rctx.evidence.x_hat, rctx.evidence.cov, rng)
-        reality_note = f"{cfg['reality']} re-identified ({rctx.twin_structure})"
+        reality_note = f"reality = {cfg['reality']} re-identified ({rctx.twin_structure})"
     else:
         from scripts.make_synthetic_s1 import X_TRUE
         reality = reality_models(model_xml, X_TRUE, None, rng)
-        reality_note = "known synthetic physics"
+        reality_note = "reality = known synthetic physics"
 
     a1_struct = min(ctx.fits, key=lambda s: ctx.fits[s]["bic"])  # best BIC, identifiable or not: the agent's own pick
     arms = {
@@ -131,7 +149,7 @@ def run_scenario(name: str, cfg: dict, seed: int) -> dict:
                    structure=a1_struct, proposed=len(claims), admitted=len(claims)),
         "A2": dict(x=ctx.evidence.x_hat, structure=ctx.twin_structure, proposed=len(claims), admitted=len(admitted_ctrl),
                    spec=_spec(next(c for c in claims if c["ref"] == admitted_ctrl[-1])) if admitted_ctrl else None,
-                   refusal=next((v["reason"] for v in reversed(verdicts) if v["verdict"] != "ADMITTED"), None)),
+                   refusal=refusal_reason(verdicts)),
     }
     rows = {}
     for arm, a in arms.items():
@@ -146,6 +164,26 @@ def run_scenario(name: str, cfg: dict, seed: int) -> dict:
             row["control"] = evaluate(a["spec"], design, reality, rng)
         rows[arm] = row
     return {"reality": reality_note, "arms": rows}
+
+
+def run_s2_scenario(cfg: dict) -> dict:
+    """S2: held-out distance NRMSE only. The agent loop is S1-only (no A1) and no S2 control task was built."""
+    from scripts.run_s2_identify import heldout_residuals, identify, nrmse, take
+    runs = Path(cfg["dir"])
+    base = (runs / "s2_model.xml").read_text()
+    r = identify(base, *take(cfg["ident"], runs))
+    failed = [v.feedback_to_agent for v in r["gates"].values() if not v.passed]
+    if not r["identifiable"]:
+        failed.insert(0, f"not identifiable ({r['reason']})")
+    note = "no S2 control task built"
+    rows = {}
+    for arm, x, structure in (("A0", S2_A0_X, "nominal solid can (no identification)"), ("A2", r["x"], r["structure"])):
+        units = {f"take{k}": nrmse(heldout_residuals(base, x, r["lower"], r["upper"], *take(k, runs)), take(k, runs)[1])
+                 for k in cfg["heldout"]}
+        rows[arm] = {"structure": structure, "heldout_nrmse": units, "claims": "—", "wall_clock_s": None,
+                     "control": None, "control_note": note, "refusal": "; ".join(failed) if arm == "A2" and failed else None}
+    return {"reality": f"takes {cfg['heldout']} held out; identification take {cfg['ident']}; A1 not run (agent loop is S1-only)",
+            "arms": rows}
 
 
 def seeded_bad() -> dict:
@@ -165,12 +203,12 @@ def h1(results: dict) -> dict:
     pairs = {"A0": [], "A1": []}
     for sc in results["scenarios"].values():
         a2 = sc["arms"]["A2"]["heldout_nrmse"]
-        for other in pairs:
+        for other in (o for o in pairs if o in sc["arms"]):
             pairs[other] += [(a2[u], sc["arms"][other]["heldout_nrmse"][u]) for u in a2]
     out = {}
     for other, p in pairs.items():
         diff = np.array([b - a for a, b in p])  # positive: A2 better
-        out[other] = {"pairs": len(p), "a2_better": int((diff > 0).sum()),
+        out[other] = {"pairs": len(p), "a2_better": int((diff > 0).sum()), "ties": int((diff == 0).sum()),
                       "p_one_sided": float(wilcoxon(diff, alternative="greater").pvalue) if len(p) else None,
                       "min_attainable_p": 0.5 ** len(p)}
     return out
@@ -187,7 +225,7 @@ def markdown(results: dict) -> tuple[str, str, str]:
         for arm, r in sc["arms"].items():
             nrmse = ", ".join(f"{u}: {fmt_pct(v)}" for u, v in r["heldout_nrmse"].items())
             c = r["control"]
-            ctrl = ("**no controller shipped** (refused)", "—", "—") if c is None else (
+            ctrl = (r.get("control_note") or "**no controller shipped** (refused)", "—", "—") if c is None else (
                 fmt_pct(c["success"]), fmt_pct(c["p_fail_upper"]), f"{c['max_u_over_limit']:.2f}")
             wall = "—" if r["wall_clock_s"] is None else f"{r['wall_clock_s']:.0f}"
             lines.append(f"| {name} | {arm} | {r['structure']} | {nrmse} | {ctrl[0]} | {ctrl[1]} | {ctrl[2]} | {r['claims']} | {wall} |")
@@ -197,7 +235,7 @@ def markdown(results: dict) -> tuple[str, str, str]:
         lines.append("**At this disturbance level every shipped controller holds every reality sample, so the control task does not "
                      "separate the arms.** The separation shows in held-out prediction, and in A2 refusing to ship where the twin is "
                      "inadequate. The task and the motor sizing were fixed before these runs and are not tuned to produce a difference.")
-    notes = [f"- **{name}**: reality = {sc['reality']}." + (f" A2 refusal: {sc['arms']['A2']['refusal']}" if sc['arms']['A2']['control'] is None else "")
+    notes = [f"- **{name}**: {sc['reality']}." + (f" A2 refusal: {sc['arms']['A2']['refusal']}" if sc['arms']['A2'].get('refusal') else "")
              for name, sc in results["scenarios"].items()]
     main = "\n".join(lines) + "\n\n" + "\n".join(notes) + (
         "\n- Task: hold upright for 5 s from |Δθ| ≤ 0.2 rad, |ω| ≤ 0.5 rad/s; success = |Δθ| ≤ 0.05 rad at 5 s. "
@@ -211,9 +249,19 @@ def markdown(results: dict) -> tuple[str, str, str]:
                     f" | {len(sb['false_rejects'])} of 3 |")
     seeded = "\n".join(sb_lines) + f"\n\nCatch rate {sb['caught']}/{sb['n']}; one-sided 95% Clopper–Pearson lower bound {sb['catch_lower_95']:.3f}. H3 {'**passes**' if sb['caught'] == sb['n'] and not sb['false_rejects'] else '**fails**'}."
     h = results["h1"]
-    h1_text = "\n".join(f"- A2 vs {o}: A2 better on {v['a2_better']}/{v['pairs']} paired units; one-sided Wilcoxon p = {v['p_one_sided']:.3f} "
-                        f"(smallest attainable with {v['pairs']} pairs: {v['min_attainable_p']:.3f})." for o, v in h.items())
-    h1_text += "\n- **H1 cannot reach α = 0.05 with this many units** (needs ≥ 5 pairs, all favouring A2). More held-out takes (S1 re-film, S2) add units."
+    h1_text = "\n".join(f"- A2 vs {o}: A2 better on {v['a2_better']}/{v['pairs']} paired units"
+                        + (f" ({v['ties']} exact ties: both arms chose the same twin)" if v.get("ties") else "")
+                        + f"; one-sided Wilcoxon p = {v['p_one_sided']:.3f} (smallest attainable with {v['pairs']} pairs: {v['min_attainable_p']:.2g})."
+                        for o, v in h.items())
+    holm = sorted((v["p_one_sided"], o) for o, v in h.items() if v["p_one_sided"] is not None)
+    rejected = []
+    for i, (p, o) in enumerate(holm):  # Holm step-down over the comparisons
+        if p > 0.05 / (len(holm) - i):
+            break
+        rejected.append(o)
+    h1_text += f"\n- Holm over {len(holm)} comparisons at α = 0.05: " + (
+        f"**H1 supported vs {', '.join(rejected)}**" if rejected else "**H1 not supported**") + (
+        "" if not rejected or set(rejected) == {o for _, o in holm} else f"; not supported vs {', '.join(o for _, o in holm if o not in rejected)}") + "."
     return main, seeded, h1_text
 
 
@@ -239,11 +287,21 @@ def main() -> None:
     ap.add_argument("--render-only", action="store_true", help="rebuild the tables from bench/results.json without rerunning")
     args = ap.parse_args()
     out = Path("bench/results.json")
-    if args.render_only:
+    if args.render_only:  # tables, H1 and refusal reasons are re-derived from the stored numbers and the logs
         results = json.loads(out.read_text())
+        for name, cfg in SCENARIOS.items():
+            if name in results["scenarios"] and results["scenarios"][name]["arms"]["A2"]["control"] is None:
+                results["scenarios"][name]["arms"]["A2"]["refusal"] = refusal_reason(
+                    [e["data"] for e in agent_log(cfg["agent"]) if e["kind"] == "verdict"])
+        for sc in results["scenarios"].values():
+            if sc["arms"]["A2"].get("refusal"):
+                sc["arms"]["A2"]["refusal"] = re.sub(r"^(G\d): \1: ", r"\1: ", sc["arms"]["A2"]["refusal"])
+        results["h1"] = h1(results)
+        out.write_text(json.dumps(results, indent=1, default=float))
     else:
         t0 = time.time()
         results = {"scenarios": {n: run_scenario(n, c, args.seed) for n, c in SCENARIOS.items()}}
+        results["scenarios"].update({n: run_s2_scenario(c) for n, c in S2_SCENARIOS.items()})
         results["seeded_bad"] = seeded_bad()
         results["h1"] = h1(results)
         results["seconds"] = time.time() - t0

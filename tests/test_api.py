@@ -63,3 +63,17 @@ def test_what_if_bounds_are_enforced():
 def test_what_if_weak_motor_is_rejected_at_g3():
     rec = client.post(f"/api/runs/{RUN}/whatif", json={"torque_limit": 0.5}).json()
     assert rec["verdict"] == "REJECTED" and rec["reason"].startswith("G3") and rec["what_if"] == {"torque_limit": 0.5}
+
+
+def test_benchmark_serves_arms_and_s2_replication():
+    d = client.get("/api/benchmark").json()
+    assert {"A0", "A2"} <= set(next(iter(d["results"]["scenarios"].values()))["arms"])
+    assert all(0.3 <= r["beta"] <= 1.5 for r in d["s2_beta"].values())
+
+
+def test_track_outside_runs_folder_is_refused():
+    from fastapi import HTTPException
+    from api.main import _track
+    with pytest.raises(HTTPException) as e:
+        _track("../../pyproject")
+    assert e.value.status_code == 400

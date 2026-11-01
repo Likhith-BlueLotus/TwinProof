@@ -56,13 +56,16 @@ def _events(run_id: str) -> list[dict]:
 
 def _track_stem(run_id: str, events: list[dict]) -> str:
     session = next((e["data"] for e in events if e["kind"] == "session"), None)
-    if session:
-        return Path(session["track"]).stem
+    if session:  # keep the sub-folder: archived rigs reuse the same take names
+        track = (ROOT / session["track"]).resolve()
+        return str(track.relative_to(RUNS.resolve()).with_suffix("")) if RUNS.resolve() in track.parents else track.stem
     return run_id[len("agent_"):-len("_20261030T000000")]  # logs written before the session event
 
 
 def _track(stem: str) -> tuple[dict, dict]:
     meta_path, npz_path = RUNS / f"{stem}.json", RUNS / f"{stem}.npz"
+    if RUNS.resolve() not in meta_path.resolve().parents:
+        raise HTTPException(400, "track outside the runs folder")
     if not meta_path.exists() or not npz_path.exists():
         raise HTTPException(404, f"track {stem} not found")
     data = np.load(npz_path)
@@ -85,7 +88,25 @@ def _summary(run_id: str, events: list[dict]) -> dict:
     verdicts = [e["data"] for e in events if e["kind"] == "verdict"]
     return {"id": run_id, "provider": provider, "started": events[0]["t"] if events else None,
             "claims": len(verdicts), "admitted": sum(v["verdict"] == "ADMITTED" for v in verdicts),
-            "done": any(e["kind"] == "final" for e in events)}
+            "done": any(e["kind"] == "final" for e in events), "track": _track_stem(run_id, events)}
+
+
+BENCH = ROOT / "bench" / "results.json"
+S2_RIGS = {"12° ramp · 31 Oct": RUNS / "s2_identify.json", "8° board · 1 Nov": RUNS / "nov01_s2" / "s2_identify.json"}
+
+
+@app.get("/api/benchmark")
+def benchmark() -> dict:
+    """Three-arm results (bench/results.json) and the S2 inertia ratio identified on each rig."""
+    if not BENCH.exists():
+        raise HTTPException(404, "no benchmark results: run python -m bench.run_all")
+    rigs = {}
+    for name, path in S2_RIGS.items():
+        if path.exists():
+            d = json.loads(path.read_text())
+            rigs[name] = {"beta": d["beta"], "beta_rel_std": d["beta_rel_std"], "structure": d["structure"],
+                          "g1": d["gates"].get("G1", {})}
+    return {"results": json.loads(BENCH.read_text()), "s2_beta": rigs}
 
 
 @app.get("/api/runs")

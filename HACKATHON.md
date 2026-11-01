@@ -18,6 +18,8 @@ Plan: [PLAN.md](PLAN.md).
 | 2026-10-31 | | | Real S1 footage: marker consensus filter, cross-take registration, measured-geometry twin; Coulomb-only structure; twin selection by BIC among identifiable fits; per-run model in the API. Held-out takes predicted at 0.78% / 1.89% NRMSE; G1 whiteness refuses certification | Claude Code; SAM 3.1; Muse Spark 1.3 (dev fallback) | `logs/runs/S1_REAL.md` |
 | 2026-10-31 | | | Three-arm benchmark (`bench/run_all.py`): held-out NRMSE real S1 A2 0.8/1.9% vs A1 1.5/2.2% vs A0 3.5/4.5%; A2 ships no controller on the real rig (G1); control task does not separate arms (all 100%); H3 7/7, 0 false rejects; H1 underpowered (3 units) | Claude Code | `bench/results.json`, BENCHMARK.md tables |
 | 2026-10-31 | | | Real S2 footage: SAM tracking ("silver disc"), stripe rotation, radius-based scale correction, straight-run window; fitted can inertia (β); slip by line fit; take 1 → β 0.78 ± 4.5%, held-out take 2 at 1.5% NRMSE, take 3 at 8.0%; G1 whiteness refuses narrowly (p 0.044) | Claude Code; SAM 3.1 | `logs/runs/S2_REAL.md` |
+| 2026-11-01 | | | Re-films: S1 with a finger-held pin, then a clamped pin (pivots agree within 5 mm; held-out 3.1/3.4%; G1 still refuses: period shortens below a 2° swing; Dahl friction, period-matched radius and armature tested and rejected). S2 on an 8° board (measured against the wall-tile horizon, not the stated 13°): β 0.738 ± 2.2% replicates 0.78 ± 4.5%; G1 refuses (p 0.003) | Claude Code; SAM 3.1; Muse Spark 1.3 (dev fallback) | `logs/runs/nov01*/README.md` |
+| 2026-11-01 | | | Benchmark over every logged rig (3 real S1, 2 real S2, synthetic) with Holm decision; console Benchmark view (three-arm table, β replication chart); rig-named runs; spoken what-ifs (browser speech → deterministic parser → same bounded re-verify); API track containment check | Claude Code | `bench/results.json`, `tests/test_api.py`, `web/src/voice.test.js` |
 
 ## Pre-registration
 
@@ -33,6 +35,8 @@ BENCHMARK.md pre-registration commit: **`84cf77a`** (2026-10-30 21:49 IST, pushe
 - **Fixed:** twin selection (best-BIC identifiable fit, independent of the order parallel fits finish in).
 - **Took measured inputs:** bar length 33 cm, mass 200 g, marker side 70 mm. For S2: can r 3.25 cm, mass 68.5 g, ramp 12° and 35.5 cm.
 - **S2 changes (after footage):** fitted can inertia ratio β (whitelisted inertial); slip measured by a line fit instead of a per-frame median.
+- **1 Nov re-films (after footage):** an operator box prompt (`--box`) when no SAM concept matches under the release stick; the S2 identification take chosen by the longest clean straight run (`--ident`), decided before fitting; the S2 slope measured against the wall-tile horizon. No threshold changed. Hypotheses tested on the clamped rig and rejected (Dahl friction, period-matched radius, period-matched armature) are logged, not used.
+- **Benchmark scope:** every logged real rig is a scenario, including the finger-held pin, so the held-out units are not cherry-picked.
 - **Not used as data:** the two AI-generated clips in `data/videos/synthetic/` (Google encoder).
 
 ## Clean-room statement

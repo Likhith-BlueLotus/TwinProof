@@ -1,7 +1,7 @@
 {
  "scenarios": {
-  "S1 real": {
-   "reality": "take1_s1 re-identified (pendulum_viscous_coulomb)",
+  "S1 real \u00b7 31 Oct": {
+   "reality": "reality = take1_s1 re-identified (pendulum_viscous_coulomb)",
    "arms": {
     "A0": {
      "structure": "nominal (no identification)",
@@ -52,12 +52,124 @@
      "claims": "7 / 0",
      "wall_clock_s": 236.44080805778503,
      "control": null,
-     "refusal": "G1: innovations not white (Ljung-Box p=7.93e-06); unmodelled dynamics remain"
+     "refusal": "G1: innovations not white (Ljung-Box p=7.11e-08); unmodelled dynamics remain"
+    }
+   }
+  },
+  "S1 real \u00b7 finger-held pin": {
+   "reality": "reality = nov01/take1_s1 re-identified (pendulum_coulomb)",
+   "arms": {
+    "A0": {
+     "structure": "nominal (no identification)",
+     "heldout_nrmse": {
+      "nov01/take1_s1": 0.07336952199808014,
+      "nov01/take2_s1": 0.07405559675993391
+     },
+     "claims": "1 / 1",
+     "wall_clock_s": null,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.4911858043067125,
+      "u_limit": 0.56633,
+      "K": [
+       1.084002844572534,
+       0.13299010189323332
+      ]
+     }
+    },
+    "A1": {
+     "structure": "pendulum_coulomb",
+     "heldout_nrmse": {
+      "nov01/take1_s1": 0.059840105503987974,
+      "nov01/take2_s1": 0.08810208441462025
+     },
+     "claims": "7 / 7",
+     "wall_clock_s": 384.4543228149414,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.6629336628191155,
+      "u_limit": 0.56633,
+      "K": [
+       1.2117815366864337,
+       0.3138610541186362
+      ]
+     }
+    },
+    "A2": {
+     "structure": "pendulum_coulomb",
+     "heldout_nrmse": {
+      "nov01/take1_s1": 0.059840105503987974,
+      "nov01/take2_s1": 0.08810208441462025
+     },
+     "claims": "7 / 0",
+     "wall_clock_s": 384.4543228149414,
+     "control": null,
+     "refusal": "G1: held-out NRMSE 0.236 > 0.1; the structure does not predict unseen motion"
+    }
+   }
+  },
+  "S1 real \u00b7 clamped pin": {
+   "reality": "reality = nov01_clamped/take1_s1 re-identified (pendulum_coulomb)",
+   "arms": {
+    "A0": {
+     "structure": "nominal (no identification)",
+     "heldout_nrmse": {
+      "nov01_clamped/take1_s1": 0.04081532462853553,
+      "nov01_clamped/take2_s1": 0.027514519122555203
+     },
+     "claims": "1 / 1",
+     "wall_clock_s": null,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.48515564038954584,
+      "u_limit": 0.58146,
+      "K": [
+       1.0977829250909283,
+       0.13552198756886927
+      ]
+     }
+    },
+    "A1": {
+     "structure": "pendulum_coulomb",
+     "heldout_nrmse": {
+      "nov01_clamped/take1_s1": 0.03065946032827465,
+      "nov01_clamped/take2_s1": 0.03424982487240835
+     },
+     "claims": "7 / 7",
+     "wall_clock_s": 258.4966359138489,
+     "control": {
+      "success": 1.0,
+      "fails": 0,
+      "p_fail_upper": 0.011633876163163281,
+      "max_u_over_limit": 0.6684139031311385,
+      "u_limit": 0.58146,
+      "K": [
+       1.2533015289547291,
+       0.3253213340066568
+      ]
+     }
+    },
+    "A2": {
+     "structure": "pendulum_coulomb",
+     "heldout_nrmse": {
+      "nov01_clamped/take1_s1": 0.03065946032827465,
+      "nov01_clamped/take2_s1": 0.03424982487240835
+     },
+     "claims": "7 / 0",
+     "wall_clock_s": 258.4966359138489,
+     "control": null,
+     "refusal": "G1: held-out NRMSE 0.160 > 0.1; the structure does not predict unseen motion"
     }
    }
   },
   "S1 synthetic": {
-   "reality": "known synthetic physics",
+   "reality": "reality = known synthetic physics",
    "arms": {
     "A0": {
      "structure": "nominal (no identification)",
@@ -117,6 +229,64 @@
      }
     }
    }
+  },
+  "S2 real \u00b7 12\u00b0 ramp, 31 Oct": {
+   "reality": "takes [2, 3] held out; identification take 1; A1 not run (agent loop is S1-only)",
+   "arms": {
+    "A0": {
+     "structure": "nominal solid can (no identification)",
+     "heldout_nrmse": {
+      "take2": 0.019155127299115258,
+      "take3": 0.07877376195761242
+     },
+     "claims": "\u2014",
+     "wall_clock_s": null,
+     "control": null,
+     "control_note": "no S2 control task built",
+     "refusal": null
+    },
+    "A2": {
+     "structure": "incline_rolling",
+     "heldout_nrmse": {
+      "take2": 0.014796731228216842,
+      "take3": 0.07983440047226652
+     },
+     "claims": "\u2014",
+     "wall_clock_s": null,
+     "control": null,
+     "control_note": "no S2 control task built",
+     "refusal": "G1: innovations not white (Ljung-Box p=0.0444); unmodelled dynamics remain"
+    }
+   }
+  },
+  "S2 real \u00b7 8\u00b0 board, 1 Nov": {
+   "reality": "takes [1, 3] held out; identification take 2; A1 not run (agent loop is S1-only)",
+   "arms": {
+    "A0": {
+     "structure": "nominal solid can (no identification)",
+     "heldout_nrmse": {
+      "take1": 0.05317575449695666,
+      "take3": 0.04993106240765078
+     },
+     "claims": "\u2014",
+     "wall_clock_s": null,
+     "control": null,
+     "control_note": "no S2 control task built",
+     "refusal": null
+    },
+    "A2": {
+     "structure": "incline_rolling",
+     "heldout_nrmse": {
+      "take1": 0.05939943144320559,
+      "take3": 0.056117629826559885
+     },
+     "claims": "\u2014",
+     "wall_clock_s": null,
+     "control": null,
+     "control_note": "no S2 control task built",
+     "refusal": "G1: innovations not white (Ljung-Box p=0.00309); unmodelled dynamics remain"
+    }
+   }
   }
  },
  "seeded_bad": {
@@ -164,17 +334,19 @@
  },
  "h1": {
   "A0": {
-   "pairs": 3,
-   "a2_better": 3,
-   "p_one_sided": 0.125,
-   "min_attainable_p": 0.125
+   "pairs": 11,
+   "a2_better": 6,
+   "ties": 0,
+   "p_one_sided": 0.16015625,
+   "min_attainable_p": 0.00048828125
   },
   "A1": {
-   "pairs": 3,
+   "pairs": 7,
    "a2_better": 2,
+   "ties": 5,
    "p_one_sided": 0.25,
-   "min_attainable_p": 0.125
+   "min_attainable_p": 0.0078125
   }
  },
- "seconds": 448.4190969467163
+ "seconds": 1120.6635961532593
 }

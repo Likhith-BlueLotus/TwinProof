@@ -55,7 +55,7 @@
  "bar_length_video_m": 0.3147976677096225,
  "registration": null,
  "rig_from": null,
- "model": "logs/runs/take3_model.xml",
+ "model": "logs/runs/nov01_clamped/take3_model.xml",
  "mass_kg": 0.2,
  "mass_assumed": false,
  "sigma_phi_rad": 0.0004318334979442255

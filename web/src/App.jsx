@@ -6,6 +6,12 @@ import PhasePortrait from './components/PhasePortrait.jsx'
 import VerdictCard from './components/VerdictCard.jsx'
 import ClaimStream from './components/ClaimStream.jsx'
 import WhatIf from './components/WhatIf.jsx'
+import BenchmarkView from './components/BenchmarkView.jsx'
+
+// recorded tracks -> the rig they came from (archived rigs live in sub-folders of logs/runs)
+const RIGS = { s1_s1: 'S1 synthetic', take3_s1: 'S1 real · 31 Oct', 'nov01/take3_s1': 'S1 real · finger-held pin', 'nov01_clamped/take3_s1': 'S1 real · clamped pin' }
+const rigName = (r) => RIGS[r.track] || r.track || r.id
+const runLabel = (r) => `${rigName(r)} · ${r.admitted}/${r.claims} admitted · ${r.id.slice(-15, -7)}`
 
 export default function App() {
   const [runs, setRuns] = useState([])
@@ -14,6 +20,7 @@ export default function App() {
   const [cursor, setCursor] = useState(Infinity) // rows shown; Infinity = whole run
   const [whatIfRecord, setWhatIfRecord] = useState(null)
   const [error, setError] = useState(null)
+  const [view, setView] = useState('runs')
   const timeRef = useRef(0)
 
   useEffect(() => {
@@ -56,16 +63,25 @@ export default function App() {
             <span className="dot" />{provider.slug}{isDev ? ' · dev fallback' : ` · ${provider.provider}`}
           </span>
         )}
-        <label className="tagline">Run{' '}
-          <select value={runId ?? ''} onChange={(e) => setRunId(e.target.value)} aria-label="Agent run">
-            {runs.map((r) => <option key={r.id} value={r.id}>{r.id.replace('agent_', '')} · {r.admitted}/{r.claims} admitted</option>)}
-          </select>
-        </label>
+        <div className="tabs" role="tablist" aria-label="View">
+          {[['runs', 'Agent runs'], ['bench', 'Benchmark']].map(([k, label]) => (
+            <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}>{label}</button>
+          ))}
+        </div>
+        {view === 'runs' && (
+          <label className="tagline">Run{' '}
+            <select value={runId ?? ''} onChange={(e) => setRunId(e.target.value)} aria-label="Agent run">
+              {runs.map((r) => <option key={r.id} value={r.id}>{runLabel(r)}</option>)}
+            </select>
+          </label>
+        )}
       </header>
 
       {error && <p className="empty" role="alert">{error}. Is the API running on :8000?</p>}
 
-      {run && (
+      {view === 'bench' && <BenchmarkView />}
+
+      {view === 'runs' && run && (
         <main className="main">
           <div className="col">
             <section className="panel">

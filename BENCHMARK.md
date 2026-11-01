@@ -52,28 +52,42 @@
 ## Results (fill only from logged runs)
 
 ### Main metrics
-_Filled by `bench/run_all.py` on 2026-10-31 20:24 from `bench/results.json`._
+_Filled by `bench/run_all.py` on 2026-11-01 16:36 from `bench/results.json`._
 
 | Scenario | Arm | Twin structure | Held-out NRMSE | Task success (N=256) | p_fail 95% UB | max commanded torque / limit | Claims proposed / admitted | Wall-clock (s) |
 |---|---|---|---|---|---|---|---|---|
-| S1 real | A0 | nominal (no identification) | take1_s1: 3.5%, take2_s1: 4.5% | 100.0% | 1.2% | 0.48 | 1 / 1 | — |
-| S1 real | A1 | pendulum_viscous_coulomb | take1_s1: 1.5%, take2_s1: 2.2% | 100.0% | 1.2% | 0.63 | 7 / 7 | 236 |
-| S1 real | A2 | pendulum_coulomb | take1_s1: 0.8%, take2_s1: 1.9% | **no controller shipped** (refused) | — | — | 7 / 0 | 236 |
+| S1 real · 31 Oct | A0 | nominal (no identification) | take1_s1: 3.5%, take2_s1: 4.5% | 100.0% | 1.2% | 0.48 | 1 / 1 | — |
+| S1 real · 31 Oct | A1 | pendulum_viscous_coulomb | take1_s1: 1.5%, take2_s1: 2.2% | 100.0% | 1.2% | 0.63 | 7 / 7 | 236 |
+| S1 real · 31 Oct | A2 | pendulum_coulomb | take1_s1: 0.8%, take2_s1: 1.9% | **no controller shipped** (refused) | — | — | 7 / 0 | 236 |
+| S1 real · finger-held pin | A0 | nominal (no identification) | nov01/take1_s1: 7.3%, nov01/take2_s1: 7.4% | 100.0% | 1.2% | 0.49 | 1 / 1 | — |
+| S1 real · finger-held pin | A1 | pendulum_coulomb | nov01/take1_s1: 6.0%, nov01/take2_s1: 8.8% | 100.0% | 1.2% | 0.66 | 7 / 7 | 384 |
+| S1 real · finger-held pin | A2 | pendulum_coulomb | nov01/take1_s1: 6.0%, nov01/take2_s1: 8.8% | **no controller shipped** (refused) | — | — | 7 / 0 | 384 |
+| S1 real · clamped pin | A0 | nominal (no identification) | nov01_clamped/take1_s1: 4.1%, nov01_clamped/take2_s1: 2.8% | 100.0% | 1.2% | 0.49 | 1 / 1 | — |
+| S1 real · clamped pin | A1 | pendulum_coulomb | nov01_clamped/take1_s1: 3.1%, nov01_clamped/take2_s1: 3.4% | 100.0% | 1.2% | 0.67 | 7 / 7 | 258 |
+| S1 real · clamped pin | A2 | pendulum_coulomb | nov01_clamped/take1_s1: 3.1%, nov01_clamped/take2_s1: 3.4% | **no controller shipped** (refused) | — | — | 7 / 0 | 258 |
 | S1 synthetic | A0 | nominal (no identification) | last 30%: 352.1% | 100.0% | 1.2% | 0.12 | 1 / 1 | — |
 | S1 synthetic | A1 | pendulum_viscous_coulomb | last 30%: 4.3% | 100.0% | 1.2% | 0.21 | 6 / 6 | 210 |
 | S1 synthetic | A2 | pendulum_viscous_coulomb | last 30%: 4.3% | 100.0% | 1.2% | 0.09 | 6 / 1 | 210 |
+| S2 real · 12° ramp, 31 Oct | A0 | nominal solid can (no identification) | take2: 1.9%, take3: 7.9% | no S2 control task built | — | — | — | — |
+| S2 real · 12° ramp, 31 Oct | A2 | incline_rolling | take2: 1.5%, take3: 8.0% | no S2 control task built | — | — | — | — |
+| S2 real · 8° board, 1 Nov | A0 | nominal solid can (no identification) | take1: 5.3%, take3: 5.0% | no S2 control task built | — | — | — | — |
+| S2 real · 8° board, 1 Nov | A2 | incline_rolling | take1: 5.9%, take3: 5.6% | no S2 control task built | — | — | — | — |
 
 **At this disturbance level every shipped controller holds every reality sample, so the control task does not separate the arms.** The separation shows in held-out prediction, and in A2 refusing to ship where the twin is inadequate. The task and the motor sizing were fixed before these runs and are not tuned to produce a difference.
 
-- **S1 real**: reality = take1_s1 re-identified (pendulum_viscous_coulomb). A2 refusal: G1: innovations not white (Ljung-Box p=7.93e-06); unmodelled dynamics remain
+- **S1 real · 31 Oct**: reality = take1_s1 re-identified (pendulum_viscous_coulomb). A2 refusal: G1: innovations not white (Ljung-Box p=7.11e-08); unmodelled dynamics remain
+- **S1 real · finger-held pin**: reality = nov01/take1_s1 re-identified (pendulum_coulomb). A2 refusal: G1: held-out NRMSE 0.236 > 0.1; the structure does not predict unseen motion
+- **S1 real · clamped pin**: reality = nov01_clamped/take1_s1 re-identified (pendulum_coulomb). A2 refusal: G1: held-out NRMSE 0.160 > 0.1; the structure does not predict unseen motion
 - **S1 synthetic**: reality = known synthetic physics.
+- **S2 real · 12° ramp, 31 Oct**: takes [2, 3] held out; identification take 1; A1 not run (agent loop is S1-only). A2 refusal: G1: innovations not white (Ljung-Box p=0.0444); unmodelled dynamics remain
+- **S2 real · 8° board, 1 Nov**: takes [1, 3] held out; identification take 2; A1 not run (agent loop is S1-only). A2 refusal: G1: innovations not white (Ljung-Box p=0.00309); unmodelled dynamics remain
 - Task: hold upright for 5 s from |Δθ| ≤ 0.2 rad, |ω| ≤ 0.5 rad/s; success = |Δθ| ≤ 0.05 rad at 5 s. The actuator clamps to the reality twin's limit; a commanded/limit ratio > 1 means the controller asked for more than the motor has.
 - Mask IoU, min clearance and $ are not measured (no rendered-twin IoU; S1 has no contacts; per-call costs not logged).
 
 **H1 (held-out NRMSE, A2 < A0 and A1):**
-- A2 vs A0: A2 better on 3/3 paired units; one-sided Wilcoxon p = 0.125 (smallest attainable with 3 pairs: 0.125).
-- A2 vs A1: A2 better on 2/3 paired units; one-sided Wilcoxon p = 0.250 (smallest attainable with 3 pairs: 0.125).
-- **H1 cannot reach α = 0.05 with this many units** (needs ≥ 5 pairs, all favouring A2). More held-out takes (S1 re-film, S2) add units.
+- A2 vs A0: A2 better on 6/11 paired units; one-sided Wilcoxon p = 0.160 (smallest attainable with 11 pairs: 0.00049).
+- A2 vs A1: A2 better on 2/7 paired units (5 exact ties: both arms chose the same twin); one-sided Wilcoxon p = 0.250 (smallest attainable with 7 pairs: 0.0078).
+- Holm over 2 comparisons at α = 0.05: **H1 not supported**.
 
 
 ### Ablations
@@ -86,7 +100,7 @@ _Filled by `bench/run_all.py` on 2026-10-31 20:24 from `bench/results.json`._
 | Uniform vs posterior-guided falsification | Sampling | failures / 100 rollouts | | | |
 
 ### Verifier seeded-bad self-test (H3)
-_Filled by `bench/run_all.py` on 2026-10-31 20:24._
+_Filled by `bench/run_all.py` on 2026-11-01 16:36._
 
 | Mutation class | n injected | Caught | First catching gate | False rejects on known-good (n) |
 |---|---|---|---|---|
