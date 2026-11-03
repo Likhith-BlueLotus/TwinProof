@@ -1,6 +1,24 @@
-# TwinProof
+<h1 align="center">TwinProof</h1>
 
-**Film it. Twin it. Prove it.**
+<p align="center"><b>Film it. Twin it. Prove it.</b></p>
+
+<p align="center">
+  <a href="https://youtu.be/HFI1HBTAqkY"><img src="docs/media/poster.jpg" width="860" alt="TwinProof demo video: the identified twin drawn over a phone video of a ruler pendulum"></a>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/HFI1HBTAqkY"><b>▶ Watch the 2:43 demo</b></a> ·
+  <a href="BENCHMARK.md">Benchmark</a> ·
+  <a href="HACKATHON.md">Build log</a> ·
+  <a href="#quickstart">Quickstart</a>
+</p>
+
+<p align="center">
+  <img alt="SAM 3.1" src="https://img.shields.io/badge/perception-SAM%203.1-2563c9">
+  <img alt="Muse Spark" src="https://img.shields.io/badge/agent-Muse%20Spark-0f2f63">
+  <img alt="MuJoCo" src="https://img.shields.io/badge/twin-MuJoCo-0b6e97">
+  <img alt="Verifier self-test" src="https://img.shields.io/badge/self--test-7%2F7%20seeded%20bugs%20caught-16794a">
+</p>
 
 Film a mechanism for ~10 seconds with a printed marker in frame. TwinProof turns the video into a MuJoCo twin that
 knows how wrong it is. An agent then proposes model fixes and controllers. A deterministic verifier either issues a
@@ -34,6 +52,8 @@ phone video ─► SAM 3.1 (box-prompted video tracking) ─► marker homograph
           ─► verifier G7 → G0 → G1 → G2 → G3 → G4 → G5 ─► ADMITTED + witness  |  REJECTED / REFUSED + reason
 ```
 
+<p align="center"><img src="docs/media/gates.gif" width="760" alt="The seven verifier gates appearing one by one, then the two outcomes: ADMITTED with a witness, REFUSED with the number that failed"></p>
+
 | Gate | Checks |
 |---|---|
 | G7 | Patch and code guard: only whitelisted MJCF fields; no goal, option or limit edits; AST scan of Python diffs |
@@ -48,7 +68,24 @@ phone video ─► SAM 3.1 (box-prompted video tracking) ─► marker homograph
 Formulas, thresholds and pre-registered hypotheses: [BENCHMARK.md](BENCHMARK.md) (pre-registered in commit `84cf77a`,
 before any real footage). Build log and every post-footage change: [HACKATHON.md](HACKATHON.md). Plan: [PLAN.md](PLAN.md).
 
+## The console
+
+<p align="center"><img src="docs/media/console.jpg" width="860" alt="TwinProof console in light mode: ghost twin over the video, phase portrait, ADMITTED verdict with seven green gate chips, what-if panel and claim stream"></p>
+
+The same verifier, two verdicts: on the synthetic rig (known physics) it certifies a controller; on real footage it
+refuses, and says which statistic failed.
+
+| Admitted: synthetic rig | Refused: real pendulum, 31 Oct |
+|---|---|
+| <img src="docs/media/verdict-admitted.jpg" alt="ADMITTED verdict card: all seven gates pass, torque bound 0.91 of 2.5 N·m"> | <img src="docs/media/verdict-refused.jpg" alt="REJECTED verdict card: G1 fails, whiteness p 7.93e-06"> |
+
 ## Real footage, rig by rig
+
+| S1 pendulum · 31 Oct | S1 clamped pin · 1 Nov | S2 can · 12° ramp | S2 can · 8° board |
+|---|---|---|---|
+| <img src="web/public/stills/s1-oct31.webp" alt="Ruler pendulum with its twin drawn in cyan"> | <img src="web/public/stills/s1-clamped.webp" alt="Clamped-pin pendulum with its twin"> | <img src="web/public/stills/s2-ramp.webp" alt="Can on the 12 degree ramp with its twin ring"> | <img src="web/public/stills/s2-board.webp" alt="Can on the 8 degree board with its twin ring"> |
+
+The cyan line or ring in each frame is the identified twin, drawn by `scripts/export_stills.py` from the logged run.
 
 | Rig | What the pipeline measured | Verdict |
 |---|---|---|
