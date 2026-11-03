@@ -11,3 +11,4 @@ node_modules/
 MUJOCO_LOG.TXT
 web/dist/
 data/glimmer_sft/
+brag-output/

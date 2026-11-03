@@ -122,7 +122,15 @@ Catch rate 7/7; one-sided 95% Clopper–Pearson lower bound 0.652. H3 **passes**
 | Base Glimmer 30B | | | | | |
 | QLoRA Glimmer 30B | | | | | |
 | Spark Open zero-shot | | | | | |
+| Muse Spark 1.2 zero-shot (Meta Model API) | **91.0%** | 100%* | 22.1 | 67.6 | |
+| Muse Spark 1.3 zero-shot (Meta Model API) | **83.5%** | 100%* | 20.9 | 46.1 | |
 
 **Not run (2026-11-03).** No GPU endpoint was available to serve either model: Modal refuses every GPU type until the
 account has a payment method, and no Together, DeepInfra, Featherless or Fireworks key exists. H4 is untested, not failed.
 The training and serving app (`infra/modal/glimmer.py`) and the eval (`scripts/eval_glimmer.py`) are built and unit-tested.
+
+**Meta Model API critics (2026-11-03, descriptive, not H4).** Same 200 held-out rows, same image, statistics and system
+prompt, reasoning effort medium. A zero-shot model is also told the six fix names and their parameters (a tuned
+critic learns them in training), and the answer is constrained by a JSON schema, so \*JSON validity is 100% by
+construction. Chance is about 17% (six balanced classes). Per-row answers were not kept, so the 1.2 vs 1.3 gap has
+no paired test. `logs/glimmer_eval_spark.json`; rerun with `scripts.eval_glimmer --spark <model>`.
