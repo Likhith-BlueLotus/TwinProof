@@ -122,3 +122,7 @@ Catch rate 7/7; one-sided 95% Clopper–Pearson lower bound 0.652. H3 **passes**
 | Base Glimmer 30B | | | | | |
 | QLoRA Glimmer 30B | | | | | |
 | Spark Open zero-shot | | | | | |
+
+**Not run (2026-11-03).** No GPU endpoint was available to serve either model: Modal refuses every GPU type until the
+account has a payment method, and no Together, DeepInfra, Featherless or Fireworks key exists. H4 is untested, not failed.
+The training and serving app (`infra/modal/glimmer.py`) and the eval (`scripts/eval_glimmer.py`) are built and unit-tested.

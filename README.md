@@ -76,7 +76,8 @@ Built and tested (Python suite + the voice-parser test):
 Not done:
 - **No certified controller on real hardware.** The next rig change is a ball-bearing pivot instead of a ruler hole on a nail.
 - **Muse Spark Open:** waits on Baseten/Fireworks keys; until then runs use Muse Spark 1.3; the UI badge names the model, and its tooltip says it stands in for Spark Open.
-- **Glimmer:** the SFT data generator works; QLoRA training and serving wait on Modal.
+- **Glimmer:** not trained or served, so H4 is untested. The data (1,500 train / 200 held-out), teacher rationales
+  (Muse Spark 1.3), the Modal QLoRA and vLLM app and the H4 eval are built; Modal needs a payment method before any GPU runs.
 - **S3 (door + Panda):** cut at the go/no-go gate (no footage).
 
 ## Quickstart
@@ -110,7 +111,7 @@ uv run python -m bench.run_all --write-benchmark      # ~25 min: refits every ri
 | SAM 3.1 | Frame-0 concept detection, then one box-prompted video request tracks every frame (`perception/sam_orchestrator.py`, parsed with Meta's `meta_sam_parser`) |
 | Muse Spark 1.3 | Scene nouns and candidate model classes from the video (`agents/spark_api.py`); dev-fallback agent model |
 | Muse Spark Open | The agent: tools for fit, patch, controller, submit, what-if (`agents/`), via Baseten → Fireworks (keys pending) |
-| Muse Glimmer 30B | Residual-plot critic; SFT data in `scripts/gen_glimmer_sft.py`, QLoRA on Modal (pending) |
+| Muse Glimmer 30B | Residual-plot critic: SFT data (`scripts/gen_glimmer_sft.py`), teacher rationales, QLoRA and serving on Modal (`infra/modal/glimmer.py`), H4 eval (`scripts/eval_glimmer.py`). Built, not run: no GPU access |
 | Muse Code | Repository commit gate: `.muse/hooks.json` blocks commits when tests or the G7 scan fail |
 
 Muse Image is not used (not available in India). Spoken what-ifs use the browser's speech recognition and a
